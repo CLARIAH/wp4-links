@@ -1,0 +1,55 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>iisg.amsterdam</groupId>
+  <artifactId>wp4-links</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>wp4-links</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      		<groupId>junit</groupId>
+      		<artifactId>junit</artifactId>
+      		<version>3.8.1</version>
+      		<scope>test</scope>
+    </dependency>
+    <dependency>
+    		<groupId>com.beust</groupId>
+    		<artifactId>jcommander</artifactId>
+    		<version>1.78</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.universal-automata</groupId>
+			<artifactId>liblevenshtein</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>eu.wdaqua</groupId>
+			<artifactId>hdt-java-core</artifactId>
+			<version>2.1</version>
+		</dependency>
+		<dependency>
+			<groupId>eu.wdaqua</groupId>
+			<artifactId>hdt-jena</artifactId>
+			<version>2.1</version>
+		</dependency>
+		<dependency>
+    		<groupId>org.apache.logging.log4j</groupId>
+    		<artifactId>log4j-core</artifactId>
+    		<version>2.13.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.rocksdb</groupId>
+			<artifactId>rocksdbjni</artifactId>
+			<version>5.5.1</version>
+		</dependency>
+  </dependencies>
+</project>
