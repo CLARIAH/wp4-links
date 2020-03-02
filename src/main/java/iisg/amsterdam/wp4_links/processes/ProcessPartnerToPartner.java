@@ -156,7 +156,6 @@ public class ProcessPartnerToPartner {
 				LOG.logError("linkPartnerToPartner", e.getLocalizedMessage());
 			} finally {
 				LINKS.closeRDF();
-
 			}
 		}
 	}

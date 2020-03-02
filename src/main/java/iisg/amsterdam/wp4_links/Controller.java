@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import iisg.amsterdam.wp4_links.processes.ProcessNewbornToPartner;
 import iisg.amsterdam.wp4_links.processes.ProcessPartnerToPartner;
+import iisg.amsterdam.wp4_links.processes.ProcessSiblings;
 import iisg.amsterdam.wp4_links.utilities.FileUtilities;
 import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 
@@ -60,6 +61,14 @@ public class Controller {
 					LOG.outputConsole("START: Link Partner to Partner");
 					linkPartnerToPartner();
 					LOG.outputTotalRuntime("Link Partner to Partner", startTime);
+				}
+				break;
+			case "linksiblings":
+				if(checkAllUserInputs() == true) {
+					long startTime = System.currentTimeMillis();
+					LOG.outputConsole("START: Link Siblings");
+					linkSiblings();
+					LOG.outputTotalRuntime("Link Siblings", startTime);
 				}
 				break;
 			default:
@@ -218,6 +227,24 @@ public class Controller {
 			}
 		} else {
 			LOG.logError("linkPartnerToPartner", "Error in creating the main output directory");
+		}
+	}
+	
+	public void linkSiblings() {
+		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, function);
+		if(processDirCreated == true) {
+			String mainDirectory = outputDirectory + "/" + function;
+			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
+			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
+			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
+			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
+				MyHDT myHDT = new MyHDT(inputDataset);	
+				new ProcessSiblings(myHDT, mainDirectory, maxLev, outputFormatRDF);
+			} else {
+				LOG.logError("linkSiblings", "Error in creating the three sub output directories");
+			}
+		} else {
+			LOG.logError("linkSiblings", "Error in creating the main output directory");
 		}
 	}
 
