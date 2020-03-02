@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import iisg.amsterdam.wp4_links.processes.ProcessNewbornToPartner;
+import iisg.amsterdam.wp4_links.processes.ProcessPartnerToPartner;
 import iisg.amsterdam.wp4_links.utilities.FileUtilities;
 import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 
@@ -13,7 +14,7 @@ import static iisg.amsterdam.wp4_links.Properties.*;
 
 public class Controller {
 
-	final String[] FUNCTIONS = {"showDatasetStats", "linkNewbornToPartner", "linkSiblings"};
+	final String[] FUNCTIONS = {"showDatasetStats", "linkNewbornToPartner", "linkPartnerToPartner", "linkSiblings"};
 
 	private String function,inputDataset,outputDirectory;
 	private int maxLev;
@@ -51,6 +52,14 @@ public class Controller {
 					LOG.outputConsole("START: Link Newborn to Partner");
 					linkNewbornToPartner();
 					LOG.outputTotalRuntime("Link Newborn to Partner", startTime);
+				}
+				break;
+			case "linkpartnertopartner":
+				if(checkAllUserInputs() == true) {
+					long startTime = System.currentTimeMillis();
+					LOG.outputConsole("START: Link Partner to Partner");
+					linkPartnerToPartner();
+					LOG.outputTotalRuntime("Link Partner to Partner", startTime);
 				}
 				break;
 			default:
@@ -190,6 +199,25 @@ public class Controller {
 			}
 		} else {
 			LOG.logError("linkNewbornToPartner", "Error in creating the main output directory");
+		}
+	}
+	
+	
+	public void linkPartnerToPartner() {
+		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, function);
+		if(processDirCreated == true) {
+			String mainDirectory = outputDirectory + "/" + function;
+			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
+			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
+			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
+			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
+				MyHDT myHDT = new MyHDT(inputDataset);	
+				new ProcessPartnerToPartner(myHDT, mainDirectory, maxLev, outputFormatRDF);
+			} else {
+				LOG.logError("linkPartnerToPartner", "Error in creating the three sub output directories");
+			}
+		} else {
+			LOG.logError("linkPartnerToPartner", "Error in creating the main output directory");
 		}
 	}
 
