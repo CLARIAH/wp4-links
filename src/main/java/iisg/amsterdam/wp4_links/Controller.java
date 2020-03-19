@@ -52,7 +52,7 @@ public class Controller {
 					long startTime = System.currentTimeMillis();
 					LOG.outputConsole("START: Link Newborn to Partner");
 					linkNewbornToPartner();
-					LOG.outputTotalRuntime("Link Newborn to Partner", startTime);
+					LOG.outputTotalRuntime("Link Newborn to Partner", startTime, true);
 				}
 				break;
 			case "linkpartnertopartner":
@@ -60,7 +60,7 @@ public class Controller {
 					long startTime = System.currentTimeMillis();
 					LOG.outputConsole("START: Link Partner to Partner");
 					linkPartnerToPartner();
-					LOG.outputTotalRuntime("Link Partner to Partner", startTime);
+					LOG.outputTotalRuntime("Link Partner to Partner", startTime, true);
 				}
 				break;
 			case "linksiblings":
@@ -68,7 +68,7 @@ public class Controller {
 					long startTime = System.currentTimeMillis();
 					LOG.outputConsole("START: Link Siblings");
 					linkSiblings();
-					LOG.outputTotalRuntime("Link Siblings", startTime);
+					LOG.outputTotalRuntime("Link Siblings", startTime, true);
 				}
 				break;
 			default:
@@ -167,26 +167,19 @@ public class Controller {
 	public void outputDatasetStatistics() {
 		MyHDT myHDT = new MyHDT(inputDataset);
 		// birth certificates
-		int numberOfBirthRegistrations = myHDT.getNumberOfSubjects(TYPE_BIRTH_REGISTRATION);
-		LOG.outputConsole("--- 	# Birth Registrations: " + numberOfBirthRegistrations + " ---");
+		// LOG.outputConsole("--- 	# Birth Registrations: " + numberOfBirthRegistrations + " ---");
 		int numberOfBirthEvents = myHDT.getNumberOfSubjects(TYPE_BIRTH_EVENT);
 		LOG.outputConsole("--- 	# Birth Events: " + numberOfBirthEvents + " ---");
-		int diffBirth = numberOfBirthRegistrations - numberOfBirthEvents;
-		LOG.outputConsole("--- 		DIFF: Registrations - Events= " + diffBirth);
 		// marriage certificates
-		int numberOfMarriageRegistrations = myHDT.getNumberOfSubjects(TYPE_MARRIAGE_REGISTRATION);
-		LOG.outputConsole("--- 	# Marriage Registrations: " + numberOfMarriageRegistrations + " ---");
+		// LOG.outputConsole("--- 	# Marriage Registrations: " + numberOfMarriageRegistrations + " ---");
 		int numberOfMarriageEvents = myHDT.getNumberOfSubjects(TYPE_MARRIAGE_EVENT);
 		LOG.outputConsole("--- 	# Marriage Events: " + numberOfMarriageEvents + " ---");
-		int diffMarriage = numberOfMarriageRegistrations - numberOfMarriageEvents;
-		LOG.outputConsole("--- 		DIFF: Registrations - Events= " + diffMarriage);
+		// LOG.outputConsole("--- 		DIFF: Registrations - Events= " + diffMarriage);
 		// death certificates
-		int numberOfDeathRegistrations = myHDT.getNumberOfSubjects(TYPE_DEATH_REGISTRATION);
-		LOG.outputConsole("--- 	# Death Registrations: " + numberOfDeathRegistrations + " ---");
+		// LOG.outputConsole("--- 	# Death Registrations: " + numberOfDeathRegistrations + " ---");
 		int numberOfDeathEvents = myHDT.getNumberOfSubjects(TYPE_DEATH_EVENT);
 		LOG.outputConsole("--- 	# Death Events: " + numberOfDeathEvents + " ---");
-		int diffDeath = numberOfDeathRegistrations - numberOfDeathEvents;
-		LOG.outputConsole("--- 		DIFF: Registrations - Events= " + diffDeath);
+		// LOG.outputConsole("--- 		DIFF: Registrations - Events= " + diffDeath);
 		// individuals
 		int numberOfIndividuals = myHDT.getNumberOfSubjects(TYPE_PERSON);
 		LOG.outputConsole("--- 	# Individuals: " + numberOfIndividuals + " ---");		
@@ -194,9 +187,10 @@ public class Controller {
 
 
 	public void linkNewbornToPartner() {
-		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, function);
+		String dirName = function + "-maxLev" + maxLev;
+		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
-			String mainDirectory = outputDirectory + "/" + function;
+			String mainDirectory = outputDirectory + "/" + dirName;
 			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
 			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
@@ -213,9 +207,10 @@ public class Controller {
 	
 	
 	public void linkPartnerToPartner() {
-		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, function);
+		String dirName = function + "-maxLev" + maxLev;
+		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
-			String mainDirectory = outputDirectory + "/" + function;
+			String mainDirectory = outputDirectory + "/" + dirName;
 			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
 			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
@@ -231,9 +226,10 @@ public class Controller {
 	}
 	
 	public void linkSiblings() {
-		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, function);
+		String dirName = function + "-maxLev" + maxLev;
+		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
-			String mainDirectory = outputDirectory + "/" + function;
+			String mainDirectory = outputDirectory + "/" + dirName;
 			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
 			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);

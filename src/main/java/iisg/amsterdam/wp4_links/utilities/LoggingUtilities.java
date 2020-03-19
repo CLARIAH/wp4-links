@@ -50,13 +50,17 @@ public final class LoggingUtilities {
 				+ "\n -----");
 	}
 	
-	public void outputTotalRuntime(String processName, long startTime) {
+	public String outputTotalRuntime(String processName, long startTime, Boolean output) {
 		long endTime = System.currentTimeMillis();
 		double totalTime = (endTime - startTime) / 1000.0;
 		double rounded_totalTime = Math.round(totalTime * 100.0) / 100.0;
 		double totalTime_minutes = totalTime / 60.0;
 		double rounded_totalTime_minutes = Math.round(totalTime_minutes * 100.0) / 100.0;
-		outputConsole("FINISHED: " + processName + " - Total runtime: " + rounded_totalTime + " seconds (" + rounded_totalTime_minutes + " minutes)");
+		String message = "FINISHED: " + processName + " - Total runtime: " + rounded_totalTime + " seconds (" + rounded_totalTime_minutes + " minutes)";
+		if(output == true) {
+			outputConsole(message);
+		}
+		return message;
 	}
 
 

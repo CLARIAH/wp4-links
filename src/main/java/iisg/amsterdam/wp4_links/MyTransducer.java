@@ -40,7 +40,7 @@ public class MyTransducer {
 	public ITransducer<Candidate> constructTransducer()
 	{
 		long startTime = System.currentTimeMillis();
-		LOG.outputConsole("START: Constructing transducer for dictionary located at: " + dictionaryPath);
+		LOG.logDebug("constructTransducer", "START: Constructing transducer for dictionary located at: " + dictionaryPath);
 		SortedDawg dictionary;
 		ITransducer<Candidate> transducer = null;
 		Path pathDictionary = Paths.get(dictionaryPath);
@@ -57,7 +57,7 @@ public class MyTransducer {
 			LOG.logError("constructTransducer", "Error while constructing transducer");
 			e.printStackTrace();
 		}
-		LOG.outputTotalRuntime("Constructing transducer for dictionary located at: " + dictionaryPath, startTime);
+		LOG.logDebug("constructTransducer", LOG.outputTotalRuntime("Constructing transducer for dictionary located at: " + dictionaryPath, startTime, false));
 		return transducer;
 	}
 	

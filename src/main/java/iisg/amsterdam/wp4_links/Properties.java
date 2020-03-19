@@ -30,6 +30,7 @@ public final class Properties {
 
 	// Prefixes
 	public final static String PREFIX_IISG = NAMESPACE + DATASET_NAME;
+	//public final static String PREFIX_IISG = "https://iisg.amsterdam/event/";
 	public final static String PREFIX_IISG_VOCAB = PREFIX_IISG + "vocab/";
 	public final static String PREFIX_SCHEMA = "http://schema.org/";
 	public final static String PREFIX_BIO = "http://purl.org/vocab/bio/0.1/";
@@ -62,13 +63,19 @@ public final class Properties {
 	public final static String REGISTRATION_SEQUENCE = PREFIX_IISG_VOCAB + "registrationSeqID";
 	public final static String BIRTH_DATE_FLAG = PREFIX_IISG_VOCAB + "birthDateFlag";
 
-	// Data properties Persons
+	// Data properties Persons correct
 	public final static String PERSON_ID = PREFIX_IISG_VOCAB + "personID";
 	public final static String GIVEN_NAME = PREFIX_SCHEMA + "givenName";
 	public final static String FAMILY_NAME = PREFIX_SCHEMA + "familyName";
 	public final static String GENDER = PREFIX_SCHEMA + "gender";
 
-	// Roles
+	//	// Data properties Persons old
+	//	public final static String PERSON_ID = "https://iisg.amsterdam/vocab/person_id";
+	//	public final static String GIVEN_NAME = "http://xmlns.com/foaf/0.1/firstName";
+	//	public final static String FAMILY_NAME = "http://xmlns.com/foaf/0.1/lastName";
+	//	public final static String GENDER = "http://xmlns.com/foaf/0.1/gender";
+
+	// Roles correct 
 	public final static String ROLE_NEWBORN = PREFIX_IISG_VOCAB + "newborn";
 	public final static String ROLE_MOTHER = PREFIX_IISG_VOCAB + "mother";
 	public final static String ROLE_FATHER = PREFIX_IISG_VOCAB + "father";
@@ -81,14 +88,27 @@ public final class Properties {
 	public final static String ROLE_GROOM_MOTHER = PREFIX_IISG_VOCAB + "motherGroom";
 	public final static String ROLE_GROOM_FATHER = PREFIX_IISG_VOCAB + "fatherGroom";
 
+	//	// Roles old
+	//	public final static String ROLE_NEWBORN = PREFIX_IISG_VOCAB + "newborn";
+	//	public final static String ROLE_MOTHER = PREFIX_IISG_VOCAB + "mother";
+	//	public final static String ROLE_FATHER = PREFIX_IISG_VOCAB + "father";
+	//	public final static String ROLE_DECEASED = PREFIX_IISG_VOCAB + "deceased";
+	//	public final static String ROLE_DECEASED_PARTNER = PREFIX_IISG_VOCAB + "deceasedPartner";
+	//	public final static String ROLE_BRIDE = "https://iisg.amsterdam/vocab/bride";
+	//	public final static String ROLE_BRIDE_MOTHER = "https://iisg.amsterdam/vocab/bride_mother";
+	//	public final static String ROLE_BRIDE_FATHER = "https://iisg.amsterdam/vocab/bride_father";
+	//	public final static String ROLE_GROOM = "https://iisg.amsterdam/vocab/groom";
+	//	public final static String ROLE_GROOM_MOTHER = "https://iisg.amsterdam/vocab/groom_mother";
+	//	public final static String ROLE_GROOM_FATHER = "https://iisg.amsterdam/vocab/groom_father";
+
 	// Created Links
 	public final static String LINK_IDENTICAL = OWL_SAMEAS;
 	public final static String LINK_SIBLINGS = PREFIX_SCHEMA + "sibling";
 	public final static String LINK_SPOUSE =  PREFIX_SCHEMA + "spouse";
 	public final static String LINK_CHILDOF = PREFIX_SCHEMA + "children";
 	public final static String LINK_PARENTOF = PREFIX_SCHEMA + "parent";
-	
-	
+
+
 	// Named Graphs Metadata
 	public final static String META_MATCHED_INVIDIUALS = PREFIX_IISG_VOCAB + "matchedIndividuals";
 	public final static String META_LEVENSHTEIN = PREFIX_IISG_VOCAB + "levenshtein";
@@ -100,32 +120,5 @@ public final class Properties {
 	public final static String DIRECTORY_NAME_DATABASE = "databases";
 	public final static String DIRECTORY_NAME_RESULTS = "results";
 
-
-
-
-	//	// Dictionary Partner (for Grooms)
-	//	final static String DICTIONARY_PARTNER_FN_G_GM_GF = "DICTIONARY_PARTNER_FN_G_GM_GF.txt";
-	//	final static String DICTIONARY_PARTNER_FN_G_GM = "DICTIONARY_PARTNER_FN_G_GM.txt";
-	//	final static String DICTIONARY_PARTNER_FN_G_GF = "DICTIONARY_PARTNER_FN_G_GF.txt";
-	//	final static String DICTIONARY_PARTNER_LN_G_GM_GF = "DICTIONARY_PARTNER_LN_G_GM_GF.txt";
-	//	final static String DICTIONARY_PARTNER_LN_G_GM = "DICTIONARY_PARTNER_LN_G_GM.txt";
-	//	final static String DICTIONARY_PARTNER_LN_G_GF = "DICTIONARY_PARTNER_LN_G_GF.txt";
-	//
-	//	// Dictionary Partner (for Brides)
-	//	final static String DICTIONARY_PARTNER_FN_B_BM_BF = "DICTIONARY_PARTNER_FN_B_BM_BF.txt";
-	//	final static String DICTIONARY_PARTNER_FN_B_BM = "DICTIONARY_PARTNER_FN_B_BM.txt";
-	//	final static String DICTIONARY_PARTNER_FN_B_BF = "DICTIONARY_PARTNER_FN_B_BF.txt";
-	//	final static String DICTIONARY_PARTNER_LN_B_BM_BF = "DICTIONARY_PARTNER_LN_B_BM_BF.txt";
-	//	final static String DICTIONARY_PARTNER_LN_B_BM = "DICTIONARY_PARTNER_LN_B_BM.txt";
-	//	final static String DICTIONARY_PARTNER_LN_B_BF = "DICTIONARY_PARTNER_LN_B_BF.txt";
-	//
-	//	// Dictionary Parents of Newborns
-	//	final static String DICTIONARY_PARENT_FN_NM_NF = "DICTIONARY_PARENT_FN_NM_NF.txt";
-	//	final static String DICTIONARY_PARENT_LN_NM_NF = "DICTIONARY_PARENT_LN_NM_NF.txt";
-	//
-	//
-	//	// Dictionary Parents of Marriages
-	//	final static String DICTIONARY_PARTNER_FN_B_G = "DICTIONARY_PARTNER_FN_B_G.txt";
-	//	final static String DICTIONARY_PARTNER_LN_B_G = "DICTIONARY_PARTNER_LN_B_G.txt";
 
 }

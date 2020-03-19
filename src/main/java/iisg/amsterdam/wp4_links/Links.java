@@ -49,11 +49,11 @@ public class Links {
 		}
 	}
 
-	
+
 	public void addToStream(String message) {
 		FILE_UTILS.writeToOutputStream(streamLinks, message);
 	}
-	
+
 
 	public String createObjectPropertyTriple(String subj, String pred, String obj) {
 		String result = "<" + subj + "> "
@@ -61,7 +61,7 @@ public class Links {
 				+ "<"+ obj + "> .";
 		return result;
 	}
-	
+
 	public String createDataPropertyTriple(String subj, String pred, String obj) {
 		String result = "<" + subj + "> "
 				+ "<" + pred + "> "
@@ -77,18 +77,61 @@ public class Links {
 				+ "<"+ graph + "> .";
 		return result;
 	}
-	
+
 
 	public void saveLinks(SingleMatch match) {
 		counterFlush++;
 		if(formatRDF == true) {
+			// In RDF we save 2 or 3 links per match because we save links between each person in the certificate
 			String link = transformMatchToRDF(match);
 			FILE_UTILS.writeToOutputStream(streamLinks, link);
 		} else {
+			// In CSV we save 1 link per match because we save links between certificates not the persons
 			String link = transformMatchToCSV(match);
 			FILE_UTILS.writeToOutputStream(streamLinks, link);
 		}
 		if(counterFlush == 20) {
+			counterFlush = 0;
+			flushLinks();
+		}
+	}
+	
+	public void saveLinks(SingleMatch match1, SingleMatch match2) {
+		if(formatRDF == true) {
+			String link1 = transformMatchToRDF(match1);
+			counterFlush++;
+			FILE_UTILS.writeToOutputStream(streamLinks, link1);
+			String link2 = transformMatchToRDF(match2);
+			counterFlush++;
+			FILE_UTILS.writeToOutputStream(streamLinks, link2);
+		} else {
+			String link = transformMatchToCSV(match1);
+			counterFlush++;
+			FILE_UTILS.writeToOutputStream(streamLinks, link);
+		}
+		if(counterFlush >= 20) {
+			counterFlush = 0;
+			flushLinks();
+		}
+	}
+	
+	public void saveLinks(SingleMatch match1, SingleMatch match2, SingleMatch match3) {
+		if(formatRDF == true) {
+			String link1 = transformMatchToRDF(match1);
+			counterFlush++;
+			FILE_UTILS.writeToOutputStream(streamLinks, link1);
+			String link2 = transformMatchToRDF(match2);
+			counterFlush++;
+			FILE_UTILS.writeToOutputStream(streamLinks, link2);
+			String link3 = transformMatchToRDF(match3);
+			counterFlush++;
+			FILE_UTILS.writeToOutputStream(streamLinks, link3);
+		} else {
+			String link = transformMatchToCSV(match1);
+			counterFlush++;
+			FILE_UTILS.writeToOutputStream(streamLinks, link);
+		}
+		if(counterFlush >= 20) {
 			counterFlush = 0;
 			flushLinks();
 		}
@@ -104,17 +147,17 @@ public class Links {
 
 
 	public String transformMatchToCSV(SingleMatch match) {
-		String link = match.getSourceCertificateID() + "," + match.getTargetCertificateID() + "," + match.getLevDistance() + "," + match.getMatchedNames() + "," + match.getYearDifference();
+		String link = match.getSourceCertificateID() + "," + match.getTargetCertificateID() + "," + match.getLevDistance() + "," + match.getMatchType()  + "," + match.getMatchedNames() + "," + match.getYearDifference();
 		return link;
 	}
-	
-	
+
+
 	public String createNamedGraph(String processName, String levDistance, String matchedNames) {
 		String graph = PREFIX_IISG + "graph/" +  processName + "/" + levDistance + "/" + matchedNames ;
 		return graph;
 	}
-	
-	
+
+
 
 	public void writeGraphsMetadata() {
 		for(String ng: namedGraphs) {	
@@ -132,12 +175,9 @@ public class Links {
 			flushLinks();
 		}
 	}
-	
-	
 
-	public void closeRDF() {
-		writeGraphsMetadata();
-	}
+
+	
 
 
 
@@ -155,7 +195,7 @@ public class Links {
 	public Boolean closeStream() {
 		try {
 			if(formatRDF == true) {
-				closeRDF();
+				writeGraphsMetadata();
 			}
 			streamLinks.close();
 			return true;

@@ -1,5 +1,7 @@
 package iisg.amsterdam.wp4_links;
 
+import java.util.ArrayList;
+
 public class Person {
 	private String URI;
 	private String role;
@@ -63,6 +65,21 @@ public class Person {
 		String fullName = getFirstName() + " " + getLastName();
 		return fullName;
 	}
+	
+	
+	public ArrayList<String> getPossibleNameVariations(){
+		ArrayList<String> result = new ArrayList<String>();
+		
+		String firstName = getFirstName();
+		if(firstName.contains("+")) {
+			
+		} else {
+			result.add(getFullName());
+		}
+		
+		return result;
+	}
+	
 
 	public String getGender() {
 		return gender;

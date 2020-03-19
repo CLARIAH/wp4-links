@@ -35,7 +35,7 @@ public class MyHDT {
 			IteratorTripleString it;
 			try {
 				it = dataset.search("", "", "");
-				LOG.outputTotalRuntime("Loading HDT Dataset", startTime);
+				LOG.outputTotalRuntime("Loading HDT Dataset", startTime, true);
 				LOG.outputConsole("--- 	Estimated number of triples in dataset: " + it.estimatedNumResults() + " ---");
 			} catch (NotFoundException e) {
 				LOG.logError("MyHDT_Constructor", "Error estimating triples in HDT dataset");
@@ -96,9 +96,9 @@ public class MyHDT {
 	}
 
 
-	
+
 	// ===== RDF Utility Functions =====
-	
+
 	/**
 	 * Returns the actual value of a typed literal
 	 * (e.g. returns the String "John" from the input "John"^^xsd:string)
@@ -137,6 +137,24 @@ public class MyHDT {
 		return literal;
 	}
 	
+	/**
+	 * Converts a Java String to xsd:String
+	 * (e.g. returns the Integer "123"^^xsd:int from the input Java String "123")
+	 * 
+	 * @param typed_literal         
+	 */
+	public String convertStringToTypedInteger(String literal) {
+		try {
+			if (literal != null) {
+				literal = '"' + literal + '"' + "^^<http://www.w3.org/2001/XMLSchema#int>";
+			}
+		} catch (Exception e) {
+			LOG.logError("convertStringToTypedInteger", "Error in converting String to Integer for input string: " + literal);
+			LOG.logError("convertStringToTypedInteger", e.toString());
+		}
+		return literal;
+	}
+
 
 
 	// ===== Dataset Specific Functions =====
@@ -247,6 +265,24 @@ public class MyHDT {
 	}
 	
 	
+	public int countNewbornsByGender(String gender) {
+		int result = 0;
+		try {
+			IteratorTripleString it = dataset.search("", ROLE_NEWBORN, "");
+			while(it.hasNext()){
+				TripleString ts = it.next();
+				String newborn = ts.getObject().toString();
+				if(getGenderFromHDT(newborn).equals(gender)) {
+					result++;
+				}
+			}
+		} catch (NotFoundException e) {
+			e.printStackTrace();
+		}
+		return result;	
+	}
+
+
 	/**
 	 * Returns the object (?o) of the statement (URI, iisg-vocab:event_date, ?o)
 	 * 
@@ -266,20 +302,43 @@ public class MyHDT {
 		}
 		return 0;
 	}
-	
-	
+
+
 	/**
 	 * Returns the event URI from its ID provided in the original CSV file
-	 * @param typeEvent
-	 * 		the type of the life event ("birth", "marriage" or "death")
 	 * @param eventID
 	 * 		the ID of this event
 	 */
-	public String getEventURIfromID(String typeEvent, String eventID) {
+	public String getEventURIfromID(String eventID) {
+		try {
+			String typedEventID = convertStringToTypedInteger(eventID);
+			IteratorTripleString it = dataset.search("", REGISTRATION_ID, typedEventID);
+			while(it.hasNext()) {
+				TripleString ts = it.next();
+				String certificateURI = ts.getSubject().toString();
+				if (certificateURI != null) {
+					IteratorTripleString it2 = dataset.search(certificateURI, REGISTER_EVENT, "");
+					while(it2.hasNext()) {
+						TripleString ts2 = it2.next();
+						String eventURI = ts2.getObject().toString();
+						return eventURI;
+					}
+				} else {
+					LOG.logError("getEventURIfromID", "The following eventID is not found in the dataset: " + eventID);
+				}
+			}
+		} catch (NotFoundException e) {
+			LOG.logError("getEventURIfromID", "The following eventID is not found in the dataset: " + eventID);
+			e.printStackTrace();
+		}
+		return null;
+
+
 		// Of course the more correct way would be to query the HDT file and get the event URI from the registration ID		
-		return PREFIX_IISG + typeEvent + "/" + eventID;
+		//return PREFIX_IISG + typeEvent + "/" + eventID;
+		//return PREFIX_IISG  + "event/" + eventID;
 	}
-	
+
 
 	/**
 	 * Returns an Object of the Java Class Person with their personal details (first name, last name, and gender) extracted from the HDT
@@ -289,18 +348,18 @@ public class MyHDT {
 	 * @param role
 	 * 		role of this person in this event with its acronym (e.g. {"N", "https://iisg.amsterdam/links_zeeland/vocab/newborn"}) 
 	 */
-//	public Person getPersonFromEvent(String event_uri, String[] role) {
-//		Person p = null;
-//		try {
-//			IteratorTripleString it = dataset.search(event_uri, role[1], "");
-//			while(it.hasNext()) {
-//				TripleString ts = it.next();
-//				p = new Person(ts.getObject(), role[0]);
-//			}
-//		} catch (NotFoundException e) {
-//			e.printStackTrace();
-//		}
-//		return p;
-//	}
+	//	public Person getPersonFromEvent(String event_uri, String[] role) {
+	//		Person p = null;
+	//		try {
+	//			IteratorTripleString it = dataset.search(event_uri, role[1], "");
+	//			while(it.hasNext()) {
+	//				TripleString ts = it.next();
+	//				p = new Person(ts.getObject(), role[0]);
+	//			}
+	//		} catch (NotFoundException e) {
+	//			e.printStackTrace();
+	//		}
+	//		return p;
+	//	}
 
 }

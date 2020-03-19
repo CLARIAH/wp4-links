@@ -37,7 +37,8 @@ public class ProcessSiblings {
 		this.mainDirectoryPath = directoryPath;
 		this.maxLev = maxLevenshtein;
 		this.myHDT = hdt;
-		LINKS = new Links("siblings", mainDirectoryPath, formatRDF);
+		String resultsFileName = "siblings-maxLev-" + maxLevenshtein;
+		LINKS = new Links(resultsFileName, mainDirectoryPath, formatRDF);
 		linkSiblings();
 	}
 
@@ -81,7 +82,7 @@ public class ProcessSiblings {
 		} finally {
 			indexMother.closeStream();
 			indexFather.closeStream();
-			LOG.outputTotalRuntime("Generating Dictionary for " + processName, startTime);
+			LOG.outputTotalRuntime("Generating Dictionary for " + processName, startTime, true);
 			LOG.outputConsole("--> count exist (Bride + Groom): " + cntInserts);
 		}
 		return true;
@@ -117,7 +118,7 @@ public class ProcessSiblings {
 								candidatesBrideEvents.retainAll(candidatesGroomEvents);			
 								for(String remainingEvent: candidatesBrideEvents) {
 									if(!remainingEvent.equals(eventID)) {
-										String birthEventURIOfSibling = myHDT.getEventURIfromID("birth", remainingEvent);
+										String birthEventURIOfSibling = myHDT.getEventURIfromID(remainingEvent);
 										int yearDifference = checkTimeConsistencySiblings(birthEventYear, birthEventURIOfSibling);
 										if(yearDifference > -1) { // if it fits the time line
 											int levDistanceMother = candidatesMother.get(remainingEvent).distance();
@@ -125,8 +126,8 @@ public class ProcessSiblings {
 											String levDistance =  levDistanceMother + "-" + levDistanceFather;
 											Person motherSiblingCertificate = myHDT.getPersonInfo(birthEventURIOfSibling, ROLE_MOTHER);
 											Person fatherSiblingCertificate = myHDT.getPersonInfo(birthEventURIOfSibling, ROLE_FATHER);																		
-											SingleMatch matchMother = new SingleMatch(mother, birthEvent, motherSiblingCertificate, birthEventURIOfSibling, levDistance, "mother-father", yearDifference);
-											SingleMatch matchFather = new SingleMatch(father, birthEvent, fatherSiblingCertificate, birthEventURIOfSibling, levDistance, "mother-father", yearDifference);
+											SingleMatch matchMother = new SingleMatch(mother, birthEvent, motherSiblingCertificate, birthEventURIOfSibling, levDistance, "Mo-Fa", "siblings", yearDifference);
+											SingleMatch matchFather = new SingleMatch(father, birthEvent, fatherSiblingCertificate, birthEventURIOfSibling, levDistance, "Mo-Fa", "siblings", yearDifference);
 											LINKS.saveLinks(matchMother);
 											LINKS.saveLinks(matchFather);
 										}
@@ -143,7 +144,7 @@ public class ProcessSiblings {
 				LOG.logError("linkPartnerToPartner", "Error in linking partners to partners in process " + processName);
 				LOG.logError("linkPartnerToPartner", e.getLocalizedMessage());
 			} finally {
-				LINKS.closeRDF();
+				LINKS.closeStream();
 			}
 		}
 	}

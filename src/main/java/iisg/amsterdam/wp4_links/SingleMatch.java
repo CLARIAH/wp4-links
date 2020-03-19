@@ -5,15 +5,16 @@ public class SingleMatch {
 	private Person sourcePerson, targetPerson;
 	private String sourceCertificateID, targetCertificateID;
 	private int yearDifference;
-	private String levDistance, matchedNames;
+	private String levDistance, matchedNames, matchType;
 	
-	public SingleMatch(Person sourcePerson, String sourceCertificateID, Person targetPerson, String targetCertificateID, String levDist, String matchedNames, int yearDiff) {
+	public SingleMatch(Person sourcePerson, String sourceCertificateID, Person targetPerson, String targetCertificateID, String levDist, String matchedNames, String matchType, int yearDiff) {
 		setSourcePerson(sourcePerson);
 		setSourceCertificateID(sourceCertificateID);
 		setTargetPerson(targetPerson);
 		setTargetCertificateID(targetCertificateID);
 		setLevDistance(levDist);
 		setMatchedNames(matchedNames);
+		setMatchType(matchType);
 		setYearDifference(yearDiff);
 	}
 
@@ -58,7 +59,9 @@ public class SingleMatch {
 	}
 
 	public String getSourceCertificateID() {
-		return sourceCertificateID;
+		String[] bits = sourceCertificateID.split("/");
+		return bits[bits.length-1];
+		//return sourceCertificateID;
 	}
 
 	public void setSourceCertificateID(String sourceCertificateID) {
@@ -66,11 +69,21 @@ public class SingleMatch {
 	}
 
 	public String getTargetCertificateID() {
-		return targetCertificateID;
+		String[] bits = targetCertificateID.split("/");
+		return bits[bits.length-1];
+		//return targetCertificateID;
 	}
 
 	public void setTargetCertificateID(String targetCertificateID) {
 		this.targetCertificateID = targetCertificateID;
+	}
+
+	public String getMatchType() {
+		return matchType;
+	}
+
+	public void setMatchType(String matchType) {
+		this.matchType = matchType;
 	}
 	
 	

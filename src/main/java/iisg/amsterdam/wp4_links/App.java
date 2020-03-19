@@ -79,7 +79,7 @@ public class App
 		// default option is to show only errors
 		Configurator.setRootLevel(Level.ERROR); 
 
-		LOG.outputConsole("PROGRAM STARTED!");
+		LOG.outputConsole("PROGRAM STARTED!!");
 		LOG.outputConsole("––––––––––––––––");
 		LOG.outputConsole("");
 		long startTime = System.currentTimeMillis();
@@ -101,19 +101,9 @@ public class App
 			System.out.println("Show some useful help...");
 		}
 
-
-
-
-//		long endTime = System.currentTimeMillis();
-//		double totalTime = (endTime - startTime) / 1000.0;
-//		double rounded_totalTime = Math.round(totalTime * 100.0) / 100.0;
-//		double totalTime_minutes = totalTime / 60.0;
-//		double rounded_totalTime_minutes = Math.round(totalTime_minutes * 100.0) / 100.0;
-
 		LOG.outputConsole("");
 		LOG.outputConsole("–––––––––––––––––");
-		LOG.outputTotalRuntime("Application", startTime);	
-//		LOG.outputConsole("Total runtime: " + rounded_totalTime + " seconds (" + rounded_totalTime_minutes + " minutes)");
+		LOG.outputTotalRuntime("PROGRAM", startTime, true);	
 	}
 
 
