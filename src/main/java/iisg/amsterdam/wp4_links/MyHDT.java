@@ -4,9 +4,12 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.rdfhdt.hdt.enums.RDFNotation;
 import org.rdfhdt.hdt.exceptions.NotFoundException;
+import org.rdfhdt.hdt.exceptions.ParserException;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
+import org.rdfhdt.hdt.options.HDTSpecification;
 import org.rdfhdt.hdt.triples.IteratorTripleString;
 import org.rdfhdt.hdt.triples.TripleString;
 
@@ -27,11 +30,11 @@ public class MyHDT {
 	 * @param hdt_file_path
 	 *            Path of the HDT file
 	 */
-	public MyHDT(String hdt_file_path) {
+	public MyHDT(String filePath) {
 		try {
 			LOG.outputConsole("START: Loading HDT Dataset");
 			long startTime = System.currentTimeMillis();
-			dataset = HDTManager.loadIndexedHDT(hdt_file_path, null);
+			dataset = HDTManager.loadIndexedHDT(filePath, null);
 			IteratorTripleString it;
 			try {
 				it = dataset.search("", "", "");
@@ -45,6 +48,32 @@ public class MyHDT {
 			LOG.logError("MyHDT_Constructor", "Error loading HDT dataset");
 			e.printStackTrace();
 		}	
+	}
+
+
+	public MyHDT(String inputRDF, String outputDir) {
+		String baseURI = "file://" + inputRDF;
+		String outputHDT = outputDir + "/dataset.hdt";
+		RDFNotation notation = null;
+		try {
+			notation =  RDFNotation.guess(inputRDF);
+		} catch (IllegalArgumentException e) {
+			LOG.logError("MyHDT Constructor", "Could not guess notation for "+inputRDF+" - Trying NTriples...");
+			notation = RDFNotation.NTRIPLES;
+		}
+		
+		HDT hdt;
+		try {
+			hdt = HDTManager.generateHDT(inputRDF, baseURI, notation, new HDTSpecification(), null);
+			hdt.saveToHDT(outputHDT, null);
+			LOG.outputConsole("HDT saved to file in: " + outputHDT);
+			hdt = HDTManager.indexedHDT(hdt, null);
+			LOG.outputConsole("Index generated and saved in: " + outputHDT);
+			hdt.close();
+		} catch (IOException | ParserException e) {
+			LOG.logError("MyHDT Constructor", "Problem generating HDT file");
+			LOG.logError("MyHDT Constructor", e.getLocalizedMessage());
+		} 
 	}
 
 
@@ -97,6 +126,7 @@ public class MyHDT {
 
 
 
+
 	// ===== RDF Utility Functions =====
 
 	/**
@@ -113,7 +143,7 @@ public class MyHDT {
 			}
 		} catch (Exception e) {
 			LOG.logError("getStringValueFromLiteral", "Error in converting Literal to String for input string: " + typed_literal);
-			LOG.logError("getStringValueFromLiteral", e.toString());
+			LOG.logError("getStringValueFromLiteral", e.getLocalizedMessage());
 		}
 		return typed_literal;
 	}
@@ -132,11 +162,11 @@ public class MyHDT {
 			}
 		} catch (Exception e) {
 			LOG.logError("convertStringToTypedLiteral", "Error in converting String to Literal for input string: " + literal);
-			LOG.logError("convertStringToTypedLiteral", e.toString());
+			LOG.logError("convertStringToTypedLiteral", e.getLocalizedMessage());
 		}
 		return literal;
 	}
-	
+
 	/**
 	 * Converts a Java String to xsd:String
 	 * (e.g. returns the Integer "123"^^xsd:int from the input Java String "123")
@@ -150,11 +180,20 @@ public class MyHDT {
 			}
 		} catch (Exception e) {
 			LOG.logError("convertStringToTypedInteger", "Error in converting String to Integer for input string: " + literal);
-			LOG.logError("convertStringToTypedInteger", e.toString());
+			LOG.logError("convertStringToTypedInteger", e.getLocalizedMessage());
 		}
 		return literal;
 	}
 
+
+	public void closeDataset() {
+		try {
+			dataset.close();
+		} catch (Exception e) {
+			LOG.logError("closeDataset", "Error while closing HDT file");
+			LOG.logError("closeDataset", e.getLocalizedMessage());
+		}
+	}
 
 
 	// ===== Dataset Specific Functions =====
@@ -263,8 +302,8 @@ public class MyHDT {
 		}
 		return gender;
 	}
-	
-	
+
+
 	public int countNewbornsByGender(String gender) {
 		int result = 0;
 		try {

@@ -15,12 +15,12 @@ import static iisg.amsterdam.wp4_links.Properties.*;
 
 public class Controller {
 
-	final String[] FUNCTIONS = {"showDatasetStats", "linkNewbornToPartner", "linkPartnerToPartner", "linkSiblings"};
+	final String[] FUNCTIONS = {"showDatasetStats", "convertToHDT", "linkNewbornToPartner", "linkPartnerToPartner", "linkSiblings"};
 
 	private String function,inputDataset,outputDirectory;
 	private int maxLev;
 	private boolean outputFormatRDF = true; 
-	
+
 
 
 	public static final Logger lg = LogManager.getLogger(Controller.class);
@@ -45,6 +45,12 @@ public class Controller {
 			case "showdatasetstats":
 				if(checkInputDataset() == true) {
 					outputDatasetStatistics();
+				}
+				break;
+			case "converttohdt":
+				if(checkInputDataset() == true) {
+					if(checkInputDirectoryOutput() == true)
+						convertToHDT();
 				}
 				break;
 			case "linknewborntopartner":
@@ -182,7 +188,13 @@ public class Controller {
 		// LOG.outputConsole("--- 		DIFF: Registrations - Events= " + diffDeath);
 		// individuals
 		int numberOfIndividuals = myHDT.getNumberOfSubjects(TYPE_PERSON);
-		LOG.outputConsole("--- 	# Individuals: " + numberOfIndividuals + " ---");		
+		LOG.outputConsole("--- 	# Individuals: " + numberOfIndividuals + " ---");
+		myHDT.closeDataset();
+	}
+
+
+	public void convertToHDT() {
+		new MyHDT(inputDataset, outputDirectory);
 	}
 
 
@@ -197,6 +209,7 @@ public class Controller {
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
 				new ProcessNewbornToPartner(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				myHDT.closeDataset();
 			} else {
 				LOG.logError("linkNewbornToPartner", "Error in creating the three sub output directories");
 			}
@@ -204,8 +217,8 @@ public class Controller {
 			LOG.logError("linkNewbornToPartner", "Error in creating the main output directory");
 		}
 	}
-	
-	
+
+
 	public void linkPartnerToPartner() {
 		String dirName = function + "-maxLev" + maxLev;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
@@ -217,6 +230,7 @@ public class Controller {
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
 				new ProcessPartnerToPartner(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				myHDT.closeDataset();
 			} else {
 				LOG.logError("linkPartnerToPartner", "Error in creating the three sub output directories");
 			}
@@ -224,7 +238,7 @@ public class Controller {
 			LOG.logError("linkPartnerToPartner", "Error in creating the main output directory");
 		}
 	}
-	
+
 	public void linkSiblings() {
 		String dirName = function + "-maxLev" + maxLev;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
@@ -236,6 +250,7 @@ public class Controller {
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
 				new ProcessSiblings(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				myHDT.closeDataset();
 			} else {
 				LOG.logError("linkSiblings", "Error in creating the three sub output directories");
 			}
@@ -246,7 +261,7 @@ public class Controller {
 
 
 
-	
+
 }
 
 
