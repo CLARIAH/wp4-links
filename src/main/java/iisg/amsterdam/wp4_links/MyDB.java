@@ -109,7 +109,7 @@ public class MyDB {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void addListValueToDB(String key, String value)  {
+	public void addListValueToDB(String key, String value) {
 		byte[] ser_key = serialize(key);
 		ArrayList<String> myList;
 		try {

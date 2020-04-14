@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import iisg.amsterdam.wp4_links.processes.ProcessMarriageParentsToMarriageParents;
 import iisg.amsterdam.wp4_links.processes.ProcessNewbornToPartner;
 import iisg.amsterdam.wp4_links.processes.ProcessPartnerToPartner;
 import iisg.amsterdam.wp4_links.processes.ProcessSiblings;
@@ -15,7 +16,8 @@ import static iisg.amsterdam.wp4_links.Properties.*;
 
 public class Controller {
 
-	final String[] FUNCTIONS = {"showDatasetStats", "convertToHDT", "linkNewbornToPartner", "linkPartnerToPartner", "linkSiblings"};
+	final String[] FUNCTIONS = {"showDatasetStats", "convertToHDT", "linkNewbornToPartner", 
+			"linkPartnerToPartner", "linkSiblings", "linkMarriageParentsToMarriageParents"};
 
 	private String function,inputDataset,outputDirectory;
 	private int maxLev;
@@ -75,6 +77,14 @@ public class Controller {
 					LOG.outputConsole("START: Link Siblings");
 					linkSiblings();
 					LOG.outputTotalRuntime("Link Siblings", startTime, true);
+				}
+				break;
+			case "linkmarriageparentstomarriageparents":
+				if(checkAllUserInputs() == true) {
+					long startTime = System.currentTimeMillis();
+					LOG.outputConsole("START: Link Marriage Parents To Marriage Parents");
+					linkMarriageParentsToMarriageParents();
+					LOG.outputTotalRuntime("Link Marriage Parents To Marriage Parents", startTime, true);
 				}
 				break;
 			default:
@@ -256,6 +266,26 @@ public class Controller {
 			}
 		} else {
 			LOG.logError("linkSiblings", "Error in creating the main output directory");
+		}
+	}
+	
+	public void linkMarriageParentsToMarriageParents() {
+		String dirName = function + "-maxLev" + maxLev;
+		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
+		if(processDirCreated == true) {
+			String mainDirectory = outputDirectory + "/" + dirName;
+			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
+			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
+			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
+			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
+				MyHDT myHDT = new MyHDT(inputDataset);	
+				new ProcessMarriageParentsToMarriageParents(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				myHDT.closeDataset();
+			} else {
+				LOG.logError("linkMarriageParentsToMarriageParents", "Error in creating the three sub output directories");
+			}
+		} else {
+			LOG.logError("linkMarriageParentsToMarriageParents", "Error in creating the main output directory");
 		}
 	}
 

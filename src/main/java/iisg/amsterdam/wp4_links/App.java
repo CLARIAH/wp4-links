@@ -2,6 +2,8 @@ package iisg.amsterdam.wp4_links;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.log4j.Appender;
+import org.apache.log4j.BasicConfigurator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 
@@ -64,7 +66,6 @@ public class App
 	public static final Logger lg = LogManager.getLogger(App.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 
-
 	public static void main(String[] argv) {
 		App main = new App();
 		JCommander.newBuilder()
@@ -76,11 +77,12 @@ public class App
 
 	public void run() {
 
-		// default option is to show only errors
-		Configurator.setRootLevel(Level.ERROR); 
-
+		// default option is to show only errors 
+		// BasicConfigurator.configure();
+		Configurator.setRootLevel(Level.ERROR);
+		
 		LOG.outputConsole("PROGRAM STARTED!!");
-		LOG.outputConsole("––––––––––––––––");
+		LOG.outputConsole("-----------------");
 		LOG.outputConsole("");
 		long startTime = System.currentTimeMillis();
 
@@ -98,11 +100,25 @@ public class App
 			cntrl.runProgram();
 		} else { 
 			// do not run program and show some help message if user enter: --help	
-			System.out.println("Show some useful help...");
+			System.out.println("The following parameters can be provided as input for the linkage tool: \n" 
+					+ "--function (required): One of the 6 following functionalities: [showDatasetStats, convertToHDT, linkNewbornToPartner, linkPartnerToPartner, linkSiblings, linkMarriageParentsToMarriageParents]\n" 
+					+ "--inputData (required for all functions): Path to the HDT dataset\n" 
+					+ "--outputDir (required for all functions, except for \"showDatasetStats\"): Path to the directory for saving the indices and the links\n" 
+					+ "--maxLev (required for all functions, except \"showDatasetStats\" and \"convertToHDT\"): Integer between 0 and 5, specifying the maximum Levenshtein distance allowed\n" 
+					+ "--format (optional for all functions, except \"showDatasetStats\" and \"convertToHDT\"): One of the two Strings: RDF (default) or CSV, specifying the desired format to save the links between certificates\n"  
+					+ "--debug (optional for all functions): One of the two Strings: error (default, showing only errors in console that occurred in the matching), all (showing every warning in console"
+					+ "\n \n"
+					+ "The current version has six functionalities, specified by the user using --function [functionalityName]: \n"
+					+ "--function convertToHDT: convert an RDF file to an HDT file\n" 
+					+ "--function showDatasetStats: show in console some general stats about the input HDT dataset\n" 
+					+ "--function linkNewbornToPartner: link newborns in Birth Certificates to brides/grooms in Marriage Certificates\n" 
+					+ "--function linkPartnerToPartner: link parents of brides/grooms in Marriage Certificates to brides and grooms in Marriage Certificates\n" 
+					+ "--function linkSiblings: link parents of newborns in Birth Certificates to parents of newborns in Birth Certificates (for detecting siblings)\n" 
+					+ "--function linkMarriageParentsToMarriageParents: link parents of brides/grooms in Marriage Certificates to parents of brides/grooms in Marriage Certificates (for detecting siblings)");
 		}
 
 		LOG.outputConsole("");
-		LOG.outputConsole("–––––––––––––––––");
+		LOG.outputConsole("-----------------");
 		LOG.outputTotalRuntime("PROGRAM", startTime, true);	
 	}
 

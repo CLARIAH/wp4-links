@@ -84,7 +84,9 @@ public class ProcessNewbornToPartner {
 			estNumber = it.estimatedNumResults();
 			LOG.outputConsole("Estimated number of certificates to be indexed is: " + estNumber);	
 			String taskName = "Indexing " + processName;
-			try (ProgressBar pb = new ProgressBar(taskName, estNumber, indexingUpdateInterval, System.err, ProgressBarStyle.UNICODE_BLOCK, " cert.", 1)) {
+			ProgressBar pb = null;
+			try {
+				pb = new ProgressBar(taskName, estNumber, indexingUpdateInterval, System.err, ProgressBarStyle.UNICODE_BLOCK, " cert.", 1);
 				while(it.hasNext()) {
 					TripleString ts = it.next();
 					cntAll++;
@@ -137,8 +139,10 @@ public class ProcessNewbornToPartner {
 						LOG.logDebug("generatePartnerIndex", "Partner is not valid of marriage event: " + marriageEvent );
 					}
 				} pb.stepTo(estNumber);
-			}
-		} catch (NotFoundException e) {
+			} finally {
+				pb.close();
+			} }
+		catch (NotFoundException e) {
 			LOG.logError("generatePartnerIndex", "Error in iterating over partners of marriage events");
 			LOG.logError("", e.toString());
 			return false;
@@ -186,75 +190,79 @@ public class ProcessNewbornToPartner {
 				long estNumber = myHDT.countNewbornsByGender(gender);
 				LOG.outputConsole("Estimated number of certificates to be linked is: " + estNumber);	
 				String taskName = "Linking Newborns to " + processName;
-				try (ProgressBar pb = new ProgressBar(taskName, estNumber, linkingUpdateInterval, System.err, ProgressBarStyle.UNICODE_BLOCK, " cert.", 1)) {
-				while(it.hasNext()) {	
-					TripleString ts = it.next();
-					cntAll++;
-					String birthEvent = ts.getSubject().toString();	
-					int birthEventYear = myHDT.getEventDate(birthEvent);
-					Person newborn = myHDT.getPersonInfo(birthEvent, ROLE_NEWBORN);
-					if(newborn.isValidWithFullName()) {
-						if(newborn.getGender().equals(gender)) {
-							// start linking here
-							ArrayList<Candidate> candidatesNewborn;
-							HashMap<String, Candidate> candidatesMotherMap, candidatesFatherMap; 
-							Person newbornMother = myHDT.getPersonInfo(birthEvent, ROLE_MOTHER);
-							Person newbornFather = myHDT.getPersonInfo(birthEvent, ROLE_FATHER);
-							Boolean validMother = newbornMother.isValidWithFullName();
-							Boolean validFather = newbornFather.isValidWithFullName();	
-							switch (validMother + "-" + validFather) {
-							case "true-true":
-								// find all marriage events that have a bride/groom that match the newborn's full name
-								candidatesNewborn = indexPartner.searchFullNameInTransducer(newborn);	
-								if(!candidatesNewborn.isEmpty()) {
-									candidatesMotherMap = indexPartnerMother.searchFullNameInTransducerAndDB(newbornMother);
-									candidatesFatherMap = indexPartnerFather.searchFullNameInTransducerAndDB(newbornFather);
-									Set<String> candidatesMotherEvents = candidatesMotherMap.keySet();
-									Set<String> candidatesFatherEvents = candidatesFatherMap.keySet();
-									for(Candidate cand: candidatesNewborn) {
-										ArrayList<String> eventsIDPartner = indexPartner.getListFromDB(cand.term());
-										eventsIDPartner.retainAll(candidatesMotherEvents);
-										eventsIDPartner.retainAll(candidatesFatherEvents);
-										for(String remainingEvent: eventsIDPartner) {
-											String marriageEventURI = myHDT.getEventURIfromID(remainingEvent);
-											int yearDifference = checkTimeConsistencyBirthToMarriage(birthEventYear, marriageEventURI);
-											if(yearDifference > -1) { // if it fits the time line
-												int levDistanceNewborn = cand.distance();
-												int levDistanceMother = candidatesMotherMap.get(remainingEvent).distance();
-												int levDistanceFather = candidatesFatherMap.get(remainingEvent).distance();
-												String levDistance = levDistanceNewborn + "-" + levDistanceMother + "-" + levDistanceFather;
-												Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);
-												Person partnerMother = myHDT.getPersonInfo(marriageEventURI, rolePartnerMother);
-												Person partnerFather = myHDT.getPersonInfo(marriageEventURI, rolePartnerFather);
-												SingleMatch matchMain = new SingleMatch(newborn, birthEvent, partner, marriageEventURI, levDistance, "Ego-Mo-Fa", familyCode, yearDifference);
-												SingleMatch matchMother = new SingleMatch(newbornMother, birthEvent, partnerMother, marriageEventURI, levDistance, "Ego-Mo-Fa", familyCode, yearDifference);
-												SingleMatch matchFather = new SingleMatch(newbornFather, birthEvent, partnerFather, marriageEventURI, levDistance, "Ego-Mo-Fa", familyCode, yearDifference);
-												LINKS.saveLinks(matchMain, matchMother, matchFather);
+				ProgressBar pb = null;
+				try { 
+					pb = new ProgressBar(taskName, estNumber, linkingUpdateInterval, System.err, ProgressBarStyle.UNICODE_BLOCK, " cert.", 1);
+					while(it.hasNext()) {	
+						TripleString ts = it.next();
+						cntAll++;
+						String birthEvent = ts.getSubject().toString();	
+						int birthEventYear = myHDT.getEventDate(birthEvent);
+						Person newborn = myHDT.getPersonInfo(birthEvent, ROLE_NEWBORN);
+						if(newborn.isValidWithFullName()) {
+							if(newborn.getGender().equals(gender)) {
+								// start linking here
+								ArrayList<Candidate> candidatesNewborn;
+								HashMap<String, Candidate> candidatesMotherMap, candidatesFatherMap; 
+								Person newbornMother = myHDT.getPersonInfo(birthEvent, ROLE_MOTHER);
+								Person newbornFather = myHDT.getPersonInfo(birthEvent, ROLE_FATHER);
+								Boolean validMother = newbornMother.isValidWithFullName();
+								Boolean validFather = newbornFather.isValidWithFullName();	
+								switch (validMother + "-" + validFather) {
+								case "true-true":
+									// find all marriage events that have a bride/groom that match the newborn's full name
+									candidatesNewborn = indexPartner.searchFullNameInTransducer(newborn);	
+									if(!candidatesNewborn.isEmpty()) {
+										candidatesMotherMap = indexPartnerMother.searchFullNameInTransducerAndDB(newbornMother);
+										candidatesFatherMap = indexPartnerFather.searchFullNameInTransducerAndDB(newbornFather);
+										Set<String> candidatesMotherEvents = candidatesMotherMap.keySet();
+										Set<String> candidatesFatherEvents = candidatesFatherMap.keySet();
+										for(Candidate cand: candidatesNewborn) {
+											ArrayList<String> eventsIDPartner = indexPartner.getListFromDB(cand.term());
+											eventsIDPartner.retainAll(candidatesMotherEvents);
+											eventsIDPartner.retainAll(candidatesFatherEvents);
+											for(String remainingEvent: eventsIDPartner) {
+												String marriageEventURI = myHDT.getEventURIfromID(remainingEvent);
+												int yearDifference = checkTimeConsistencyBirthToMarriage(birthEventYear, marriageEventURI);
+												if(yearDifference > -1) { // if it fits the time line
+													int levDistanceNewborn = cand.distance();
+													int levDistanceMother = candidatesMotherMap.get(remainingEvent).distance();
+													int levDistanceFather = candidatesFatherMap.get(remainingEvent).distance();
+													String levDistance = levDistanceNewborn + "-" + levDistanceMother + "-" + levDistanceFather;
+													Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);
+													Person partnerMother = myHDT.getPersonInfo(marriageEventURI, rolePartnerMother);
+													Person partnerFather = myHDT.getPersonInfo(marriageEventURI, rolePartnerFather);
+													SingleMatch matchMain = new SingleMatch(newborn, birthEvent, partner, marriageEventURI, levDistance, "Ego-Mo-Fa", familyCode, yearDifference);
+													SingleMatch matchMother = new SingleMatch(newbornMother, birthEvent, partnerMother, marriageEventURI, levDistance, "Ego-Mo-Fa", familyCode, yearDifference);
+													SingleMatch matchFather = new SingleMatch(newbornFather, birthEvent, partnerFather, marriageEventURI, levDistance, "Ego-Mo-Fa", familyCode, yearDifference);
+													LINKS.saveLinks(matchMain, matchMother, matchFather, LINK_IDENTICAL);
+												}
 											}
 										}
 									}
+									break;
+								case "true-false":
+
+									break;
+								case "false-true":
+
+									break;
+								case "false-false":
+
+									break;
+								default:
+									LOG.logError("generatePartnerIndex", "Something has gone wrong processing event: " + birthEvent);
+								}			
+								if(cntAll % 10000 == 0) {
+									pb.stepBy(10000);
 								}
-								break;
-							case "true-false":
 
-								break;
-							case "false-true":
-	
-								break;
-							case "false-false":
-
-								break;
-							default:
-								LOG.logError("generatePartnerIndex", "Something has gone wrong processing event: " + birthEvent);
-							}			
-							if(cntAll % 10000 == 0) {
-								pb.stepBy(10000);
-							}
-						
 							}
 						}			
 					} pb.stepTo(estNumber);
-				} 
+				}  finally {
+					pb.close();
+				}
 			} catch (Exception e) {
 				LOG.logError("linkNewbornToPartner", "Error in linking newborn to partners in process " + processName);
 				LOG.logError("linkNewbornToPartner", e.getLocalizedMessage());

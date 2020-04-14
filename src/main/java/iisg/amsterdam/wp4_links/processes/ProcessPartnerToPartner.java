@@ -1,11 +1,6 @@
 package iisg.amsterdam.wp4_links.processes;
 
-import static iisg.amsterdam.wp4_links.Properties.ROLE_BRIDE;
-import static iisg.amsterdam.wp4_links.Properties.ROLE_BRIDE_FATHER;
-import static iisg.amsterdam.wp4_links.Properties.ROLE_BRIDE_MOTHER;
-import static iisg.amsterdam.wp4_links.Properties.ROLE_GROOM;
-import static iisg.amsterdam.wp4_links.Properties.ROLE_GROOM_FATHER;
-import static iisg.amsterdam.wp4_links.Properties.ROLE_GROOM_MOTHER;
+import static iisg.amsterdam.wp4_links.Properties.*;
 
 
 import java.util.HashMap;
@@ -69,7 +64,9 @@ public class ProcessPartnerToPartner {
 			long estNumber = it.estimatedNumResults();
 			LOG.outputConsole("Estimated number of certificates to be indexed is: " + estNumber);	
 			String taskName = "Indexing " + processName;
-			try (ProgressBar pb = new ProgressBar(taskName, estNumber, indexingUpdateInterval, System.err, ProgressBarStyle.UNICODE_BLOCK, " cert.", 1)) {
+			ProgressBar pb = null;
+			try {
+			pb = new ProgressBar(taskName, estNumber, indexingUpdateInterval, System.err, ProgressBarStyle.UNICODE_BLOCK, " cert.", 1);
 				while(it.hasNext()) {
 					TripleString ts = it.next();
 					cntAll++;
@@ -91,6 +88,8 @@ public class ProcessPartnerToPartner {
 						//LOG.outputConsole("Generating Dictionary: number of indexed " + processName + " is: " + cntInserts);
 					}						
 				} pb.stepTo(estNumber);
+			} finally {
+				pb.close();
 			}
 		} catch (NotFoundException e) {
 			LOG.logError("generateCoupleIndex", "Error in iterating over partners of marriage events");
@@ -118,7 +117,9 @@ public class ProcessPartnerToPartner {
 				long estNumber = it.estimatedNumResults();
 				LOG.outputConsole("Estimated number of certificates to be linked is: " + estNumber);	
 				String taskName = "Linking " + processName;
-				try (ProgressBar pb = new ProgressBar(taskName, estNumber, linkingUpdateInterval, System.err, ProgressBarStyle.UNICODE_BLOCK, " cert.", 1)) {
+				ProgressBar pb = null;
+				try {
+				pb = new ProgressBar(taskName, estNumber, linkingUpdateInterval, System.err, ProgressBarStyle.UNICODE_BLOCK, " cert.", 1); 
 					while(it.hasNext()) {	
 						TripleString ts = it.next();	
 						cntAll++;
@@ -143,21 +144,25 @@ public class ProcessPartnerToPartner {
 								if(!candidatesBride.isEmpty()) {
 									candidatesGroom = indexGroom.searchFullNameInTransducerAndDB(father);
 									if(!candidatesGroom.isEmpty()) {
-										Set<String> candidatesBrideEvents = candidatesBride.keySet();
-										Set<String> candidatesGroomEvents = candidatesGroom.keySet();
-										candidatesBrideEvents.retainAll(candidatesGroomEvents);			
-										for(String remainingEvent: candidatesBrideEvents) {
+										HashMap<String, String> candidateEvents = indexBride.getIntersectedCandidateEvents(candidatesBride, candidatesGroom);		
+										for(String remainingEvent: candidateEvents.keySet()) {
 											String marriageEventAsCoupleURI = myHDT.getEventURIfromID(remainingEvent);
 											int yearDifference = checkTimeConsistencyMarriageToMarriage(marriageEventYear, marriageEventAsCoupleURI);
 											if(yearDifference > -1) { // if it fits the time line
-												int levDistanceMother = candidatesBride.get(remainingEvent).distance();
-												int levDistanceFather = candidatesGroom.get(remainingEvent).distance();
-												String levDistance =  levDistanceMother + "-" + levDistanceFather;										
+												String meta[] = candidateEvents.get(remainingEvent).split(",");
+												//int levDistanceMother = candidatesBride.get(remainingEvent).distance();
+												// int levDistanceFather = candidatesGroom.get(remainingEvent).distance();
+												// String levDistance =  levDistanceMother + "-" + levDistanceFather;
+//												String matchedNamesBride[] = candidatesBride.get(remainingEvent).term().split(indexBride.eventID_matchedNames_separator);
+//												String matchedNamesGroom[] = candidatesGroom.get(remainingEvent).term().split(indexGroom.eventID_matchedNames_separator);
+//												String matchedNames = matchedNamesBride[1] + "," + matchedNamesGroom[1];
 												Person bride = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_BRIDE);
-												Person groom = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_GROOM);											
-												SingleMatch matchBride = new SingleMatch(mother, marriageEvent, bride, marriageEventAsCoupleURI, levDistance, "Br-Gr", familyCode, yearDifference);												
-												SingleMatch matchGroom = new SingleMatch(father, marriageEvent, groom, marriageEventAsCoupleURI, levDistance, "Br-Gr", familyCode, yearDifference);
-												LINKS.saveLinks(matchBride, matchGroom);
+												Person groom = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_GROOM);	
+												String levDistance = meta[0];
+												String matchedNames = meta[1];
+												SingleMatch matchBride = new SingleMatch(mother, marriageEvent, bride, marriageEventAsCoupleURI, levDistance, matchedNames, familyCode, yearDifference);												
+												SingleMatch matchGroom = new SingleMatch(father, marriageEvent, groom, marriageEventAsCoupleURI, levDistance, matchedNames, familyCode, yearDifference);
+												LINKS.saveLinks(matchBride, matchGroom, LINK_IDENTICAL);
 											}
 										}
 									}
@@ -169,10 +174,12 @@ public class ProcessPartnerToPartner {
 							//LOG.outputConsole("Linking Couples to " + processName + ": " + cntLinks);
 						}
 					} pb.stepTo(estNumber); 
-				} 
+				} finally {
+					pb.close();
+				}
 			} catch (Exception e) {
 				LOG.logError("linkPartnerToPartner", "Error in linking partners to partners in process " + processName);
-				LOG.logError("linkPartnerToPartner", e.getLocalizedMessage());
+				e.printStackTrace();
 			} finally {
 				LINKS.closeStream();
 			}

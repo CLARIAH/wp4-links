@@ -6,6 +6,7 @@ public class SingleMatch {
 	private String sourceCertificateID, targetCertificateID;
 	private int yearDifference;
 	private String levDistance, matchedNames, matchType;
+
 	
 	public SingleMatch(Person sourcePerson, String sourceCertificateID, Person targetPerson, String targetCertificateID, String levDist, String matchedNames, String matchType, int yearDiff) {
 		setSourcePerson(sourcePerson);
@@ -85,6 +86,7 @@ public class SingleMatch {
 	public void setMatchType(String matchType) {
 		this.matchType = matchType;
 	}
+
 	
 	
 

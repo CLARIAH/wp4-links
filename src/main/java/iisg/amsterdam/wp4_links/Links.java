@@ -79,11 +79,11 @@ public class Links {
 	}
 
 
-	public void saveLinks(SingleMatch match) {
+	public void saveLinks(SingleMatch match, String identityLink) {
 		counterFlush++;
 		if(formatRDF == true) {
 			// In RDF we save 2 or 3 links per match because we save links between each person in the certificate
-			String link = transformMatchToRDF(match);
+			String link = transformMatchToRDF(match, identityLink);
 			FILE_UTILS.writeToOutputStream(streamLinks, link);
 		} else {
 			// In CSV we save 1 link per match because we save links between certificates not the persons
@@ -96,12 +96,12 @@ public class Links {
 		}
 	}
 	
-	public void saveLinks(SingleMatch match1, SingleMatch match2) {
+	public void saveLinks(SingleMatch match1, SingleMatch match2, String identityLink) {
 		if(formatRDF == true) {
-			String link1 = transformMatchToRDF(match1);
+			String link1 = transformMatchToRDF(match1, identityLink);
 			counterFlush++;
 			FILE_UTILS.writeToOutputStream(streamLinks, link1);
-			String link2 = transformMatchToRDF(match2);
+			String link2 = transformMatchToRDF(match2, identityLink);
 			counterFlush++;
 			FILE_UTILS.writeToOutputStream(streamLinks, link2);
 		} else {
@@ -115,15 +115,15 @@ public class Links {
 		}
 	}
 	
-	public void saveLinks(SingleMatch match1, SingleMatch match2, SingleMatch match3) {
+	public void saveLinks(SingleMatch match1, SingleMatch match2, SingleMatch match3, String identityLink) {
 		if(formatRDF == true) {
-			String link1 = transformMatchToRDF(match1);
+			String link1 = transformMatchToRDF(match1, identityLink);
 			counterFlush++;
 			FILE_UTILS.writeToOutputStream(streamLinks, link1);
-			String link2 = transformMatchToRDF(match2);
+			String link2 = transformMatchToRDF(match2, identityLink);
 			counterFlush++;
 			FILE_UTILS.writeToOutputStream(streamLinks, link2);
-			String link3 = transformMatchToRDF(match3);
+			String link3 = transformMatchToRDF(match3, identityLink);
 			counterFlush++;
 			FILE_UTILS.writeToOutputStream(streamLinks, link3);
 		} else {
@@ -138,10 +138,10 @@ public class Links {
 	}
 
 
-	public String transformMatchToRDF(SingleMatch match) {
+	public String transformMatchToRDF(SingleMatch match, String identityLink) {
 		String graph = createNamedGraph(linksID, match.getLevDistance(), match.getMatchedNames());
 		namedGraphs.add(linksID + "/" + match.getLevDistance() + "/" + match.getMatchedNames());
-		String link = createQuad(match.getSourcePerson().getURI(), LINK_IDENTICAL, match.getTargetPerson().getURI(), graph);
+		String link = createQuad(match.getSourcePerson().getURI(), identityLink, match.getTargetPerson().getURI(), graph);
 		return link;
 	}
 

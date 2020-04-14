@@ -1,6 +1,12 @@
 package iisg.amsterdam.wp4_links;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 public class Person {
 	private String URI;
@@ -8,13 +14,13 @@ public class Person {
 	private String first_name = null;
 	private String last_name = null;
 	private String gender = null;
-	private final String compound_name_separator = "+";
+	private final String compound_name_separator = "_";
 	private Boolean valid;
 
 	public Person() {
 		setValid(false);
 	}
-	
+
 	public Person(CharSequence URI, String role) {
 		this.URI = URI.toString();
 		this.role = role;
@@ -60,26 +66,45 @@ public class Person {
 			return null;
 		}	
 	}
-	
+
 	public String getFullName() {
 		String fullName = getFirstName() + " " + getLastName();
 		return fullName;
 	}
-	
-	
-	public ArrayList<String> getPossibleNameVariations(){
-		ArrayList<String> result = new ArrayList<String>();
-		
+
+
+	public HashMap<String, String> getPossibleFullNameCombinations(){
+		HashMap<String,String> fullNames = new HashMap<String,String>();
 		String firstName = getFirstName();
-		if(firstName.contains("+")) {
-			
+		if(firstName.contains(compound_name_separator)) {
+			String[] firstNames = firstName.split(compound_name_separator);
+			fullNames = orderedCombination(firstNames, getLastName());
 		} else {
-			result.add(getFullName());
+			fullNames.put(getFullName(), "1/1");
 		}
-		
+		return fullNames;
+	}
+
+
+	public HashMap<String,String> orderedCombination(String[] firstNames, String lastName) {
+		HashMap<String,String> result = new HashMap<String,String>();
+		Integer length = firstNames.length;
+		String[] copiedFirstNames = firstNames.clone();
+		for (int i=0; i< length; i++){
+			String fixed = firstNames[i];
+			int count = 1;
+			result.put(fixed + " " + lastName, count+ "/" +length);
+			copiedFirstNames = ArrayUtils.removeElement(copiedFirstNames, fixed);
+			for (String fn: copiedFirstNames){
+				count++;
+				fixed = fixed + compound_name_separator + fn;
+				result.put(fixed + " " + lastName, count + "/" + length);
+			}
+		}
 		return result;
 	}
-	
+
+
 
 	public String getGender() {
 		return gender;
@@ -158,7 +183,7 @@ public class Person {
 	public Boolean isValid() {
 		return valid;
 	}
-	
+
 	public Boolean isValidWithFullName() {
 		if(isValid()) {
 			if(hasFullName()) {

@@ -44,7 +44,8 @@ public class MyTransducer {
 		SortedDawg dictionary;
 		ITransducer<Candidate> transducer = null;
 		Path pathDictionary = Paths.get(dictionaryPath);
-		try (final InputStream stream = Files.newInputStream(pathDictionary)) {
+		try { 
+			final InputStream stream = Files.newInputStream(pathDictionary); 
 			final Serializer serializer = new PlainTextSerializer(false);
 			dictionary = serializer.deserialize(SortedDawg.class, stream);
 			transducer = new TransducerBuilder()

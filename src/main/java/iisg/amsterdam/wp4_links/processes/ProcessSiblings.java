@@ -128,8 +128,8 @@ public class ProcessSiblings {
 											Person fatherSiblingCertificate = myHDT.getPersonInfo(birthEventURIOfSibling, ROLE_FATHER);																		
 											SingleMatch matchMother = new SingleMatch(mother, birthEvent, motherSiblingCertificate, birthEventURIOfSibling, levDistance, "Mo-Fa", "siblings", yearDifference);
 											SingleMatch matchFather = new SingleMatch(father, birthEvent, fatherSiblingCertificate, birthEventURIOfSibling, levDistance, "Mo-Fa", "siblings", yearDifference);
-											LINKS.saveLinks(matchMother);
-											LINKS.saveLinks(matchFather);
+											LINKS.saveLinks(matchMother, LINK_SIBLINGS);
+											LINKS.saveLinks(matchFather, LINK_SIBLINGS);
 										}
 									}
 								}
