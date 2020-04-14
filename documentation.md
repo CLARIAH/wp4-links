@@ -1,4 +1,4 @@
-# LINKS linkage tool
+# LINKS: civil registries linkage tool
 
 ## Purpose
 - to improve (and replace) the current [LINKS](https://iisg.amsterdam/en/hsn/projects/links) software. Points of improvement are:
