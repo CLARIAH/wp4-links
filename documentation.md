@@ -15,6 +15,12 @@ The software is designed for the so called ‘digital’ historian: e.g. someone
 ## What it is not 
 In its current version, it cannot be used to match entities from just any source. The current tool is solely focused on the linkage of civil records, relying on the sanguineous relations on the civil record, modelled according to our Civil Registers schema. 
 
+## Previous work
+So far, (Dutch) civil records have been linked by bespoke programming by researchers, sometimes supported by engineers. Specifically the IISG-LINKS programme has a pipeline to link these records and provide them to the Central Bureau of Genealogy (CBG). Because the number of records has grown over time and the IISG-LINKS takes an enormous mount of time (about a month) to LINK all records currently present, WP4-LINKS is desgined do this much faster (full sample takes less than 48 hours).
+
+The Golden Agents project has brought about [Lenticular Lenses](https://www.goldenagents.org/tools/lenticular-lenses/) a tool designed to link persons across sources of various nature. We have engaged with the Lenticular Lenses team on multiple occasions (a demo-presentation, two person-vocabulary workshops, and a specific between-teams-workshop). From those meetings we have adopted the [ROAR vocabulary](https://leonvanwissen.nl/vocab/roar/docs/) for work in CLARIAH-WP4. On the specific wp4-LINKS and lenticular lensens tool, however we found that the prerequisite in Lenticular Lenses to allow for heterogenous sources, conflicted with the wp4-LINKS prequisite to be fast: one reason for it to be fast is the limited set of sources that wp4-LINKS allows for. 
+
+The only other set of initiatives that we are aware of are bespoke programming initiatives by domain specificic researchers, with country and time specific rules for linking in for example R. These linkage tools are on the whole slow. What we did do is make our own rule set for linking modular, to allow in the future for country and time specific rule sets to be encorporated in wp4-LINKS.
 
 # Technical specifications
 ## Installation requirements
