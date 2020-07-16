@@ -28,7 +28,7 @@ The only other set of initiatives that we are aware of are bespoke programming i
 Free download: https://www.oracle.com/java/technologies/javase-jre8-downloads.html
 
 ## Input requirements
-- Only one RDF dataset, with the data being modelled according to our simple [Civil Registries schema] (assets/LINKS-schema.png), based on Schema.org and BIO vocabularies as advocated in the Golden Agents project. You can browse the [RDF file] (assets/LINKS-schema.ttl) in any triple store (e.g. Druid) or Ontology editor (e.g. Protégé).
+- Only one RDF dataset, with the data being modelled according to our simple [Civil Registries schema](assets/LINKS-schema.png), based on Schema.org and BIO vocabularies as advocated in the Golden Agents project. You can browse the [RDF file](assets/LINKS-schema.ttl) in any triple store (e.g. Druid) or Ontology editor (e.g. Protégé).
 
 For efficient querying (less memory usage, fast search), the matching tool requires the dataset to be compressed and given as an HDT file with its index [1].
 The tool allows the conversion of an RDF file (any serialisation) to HDT using the --function convertToHDT.

@@ -4,8 +4,8 @@ Code for linking all Dutch civil registries. It's purpose, use case, technical f
 
 
 ## How does it work?
-1. Convert all CSV files to RDF according to our simple [Civil Registries schema] (assets/LINKS-schema.png), based on Schema.org and BIO vocabularies. You can browse the [RDF file] (assets/LINKS-schema.ttl) in any triple store (e.g. Druid) or Ontology editor (e.g. Protégé).
-  - We use COW for converting the CSV files to RDF, but any other method would also work as long as the data in RDF are modelled according to the  [Civil Registries schema] (assets/LINKS-schema.png).
+1. Convert all CSV files to RDF according to our simple [Civil Registries schema](assets/LINKS-schema.png), based on Schema.org and BIO vocabularies. You can browse the [RDF file](assets/LINKS-schema.ttl) in any triple store (e.g. Druid) or Ontology editor (e.g. Protégé).
+  - We use COW for converting the CSV files to RDF, but any other method would also work as long as the data in RDF are modelled according to the  [Civil Registries schema](assets/LINKS-schema.png).
 
 2. Merge all resulting RDF files into one larger file:
   - ```cat birth-registrations.nq birth-persons.nq marriage-registrations.nq marriage-persons.nq > all-births-marriages.nq```
