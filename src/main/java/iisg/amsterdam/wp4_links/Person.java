@@ -1,12 +1,12 @@
 package iisg.amsterdam.wp4_links;
 
-import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class Person {
 	private String URI;
@@ -14,8 +14,8 @@ public class Person {
 	private String first_name = null;
 	private String last_name = null;
 	private String gender = null;
-	private final String compound_name_separator = "_";
 	private Boolean valid;
+	public final String names_separator = " ", compound_name_separator = "_";
 
 	public Person() {
 		setValid(false);
@@ -68,7 +68,7 @@ public class Person {
 	}
 
 	public String getFullName() {
-		String fullName = getFirstName() + " " + getLastName();
+		String fullName = getFirstName() + names_separator + getLastName();
 		return fullName;
 	}
 
@@ -93,12 +93,12 @@ public class Person {
 		for (int i=0; i< length; i++){
 			String fixed = firstNames[i];
 			int count = 1;
-			result.put(fixed + " " + lastName, count+ "/" +length);
+			result.put(fixed + names_separator + lastName, count+ "/" +length);
 			copiedFirstNames = ArrayUtils.removeElement(copiedFirstNames, fixed);
 			for (String fn: copiedFirstNames){
 				count++;
 				fixed = fixed + compound_name_separator + fn;
-				result.put(fixed + " " + lastName, count + "/" + length);
+				result.put(fixed + names_separator + lastName, count + "/" + length);
 			}
 		}
 		return result;
@@ -137,7 +137,7 @@ public class Person {
 	}
 
 	public Boolean hasFullName() {
-		if(first_name != null){
+		if(first_name != null && !first_name.equals("n")){
 			if(last_name != null) {
 				return true;
 			}
@@ -152,7 +152,7 @@ public class Person {
 		return false;
 	}
 
-	public Boolean hasCompoundFirstName() {
+	public Boolean hasDoubleBarreledFirstName() {
 		if (this.getFirstName() != null) {
 			if(this.getFirstName().contains(compound_name_separator)) {
 				return true;
@@ -162,8 +162,7 @@ public class Person {
 	}
 
 
-
-	public Boolean hasCompoundLastName() {
+	public Boolean hasDoubleBarreledLastName() {
 		if (this.getLastName() != null) {
 			if(this.getLastName().contains(compound_name_separator)) {
 				return true;
@@ -173,8 +172,29 @@ public class Person {
 	}
 
 	public String[] decomposeFirstname() {
-		return this.getFirstName().split(compound_name_separator);
+		if(this.hasDoubleBarreledFirstName()) {
+			return this.getFirstName().split(compound_name_separator);
+		} else {
+			return new String[] {this.getFirstName()};
+		}
 	}
+
+
+	public Set<String> decomposeFirstnameAddLastName() {
+		Set<String> result = new HashSet<String>();
+		if(this.hasDoubleBarreledFirstName()) {
+			String[] firstNames = this.getFirstName().split(compound_name_separator); 
+			String lastname = this.getLastName(); 
+			for(String firstname: firstNames) {
+				result.add(firstname + names_separator + lastname);
+			}
+		} else {
+			result.add(this.getFullName());
+		}
+		return result;
+	}
+
+
 
 	public String[] decomposeLastname() {
 		return this.getLastName().split(compound_name_separator);
@@ -197,5 +217,14 @@ public class Person {
 		this.valid = valid;
 	}
 
+	
+	public int getNumberOfFirstNames() {
+		if(hasFirstName()) {
+			int nb_first_names = StringUtils.countMatches(this.first_name, names_separator);
+			return nb_first_names + 1;
+		} else {
+			return -1;
+		}
+	}
 
 }

@@ -5,10 +5,7 @@ import java.util.Arrays;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import iisg.amsterdam.wp4_links.processes.ProcessMarriageParentsToMarriageParents;
-import iisg.amsterdam.wp4_links.processes.ProcessNewbornToPartner;
-import iisg.amsterdam.wp4_links.processes.ProcessPartnerToPartner;
-import iisg.amsterdam.wp4_links.processes.ProcessSiblings;
+import iisg.amsterdam.wp4_links.processes.*;
 import iisg.amsterdam.wp4_links.utilities.FileUtilities;
 import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 
@@ -16,8 +13,8 @@ import static iisg.amsterdam.wp4_links.Properties.*;
 
 public class Controller {
 
-	final String[] FUNCTIONS = {"showDatasetStats", "convertToHDT", "linkNewbornToPartner", 
-			"linkPartnerToPartner", "linkSiblings", "linkMarriageParentsToMarriageParents"};
+	final String[] FUNCTIONS = {"showDatasetStats", "convertToHDT", "within_b_m", 
+			"between_m_m"};
 
 	private String function,inputDataset,outputDirectory;
 	private int maxLev;
@@ -55,38 +52,38 @@ public class Controller {
 						convertToHDT();
 				}
 				break;
-			case "linknewborntopartner":
+			case "within_b_m":
 				if(checkAllUserInputs() == true) {
 					long startTime = System.currentTimeMillis();
-					LOG.outputConsole("START: Link Newborn to Partner");
-					linkNewbornToPartner();
-					LOG.outputTotalRuntime("Link Newborn to Partner", startTime, true);
+					LOG.outputConsole("START: Within Births-Marriages (i.e. newborn --> partner)");
+					Within_B_M();
+					LOG.outputTotalRuntime("Within Births-Marriages (i.e. newborn --> partner)", startTime, true);
 				}
 				break;
-			case "linkpartnertopartner":
+			case "between_m_m":
 				if(checkAllUserInputs() == true) {
 					long startTime = System.currentTimeMillis();
-					LOG.outputConsole("START: Link Partner to Partner");
-					linkPartnerToPartner();
-					LOG.outputTotalRuntime("Link Partner to Partner", startTime, true);
+					LOG.outputConsole("START: Between Marriages-Marriages (i.e. newly-weds' parents --> newly-weds)");
+					Between_M_M();
+					LOG.outputTotalRuntime("Between Marriages-Marriages (i.e. newly-weds' parents --> newly-weds)", startTime, true);
 				}
 				break;
-			case "linksiblings":
-				if(checkAllUserInputs() == true) {
-					long startTime = System.currentTimeMillis();
-					LOG.outputConsole("START: Link Siblings");
-					linkSiblings();
-					LOG.outputTotalRuntime("Link Siblings", startTime, true);
-				}
-				break;
-			case "linkmarriageparentstomarriageparents":
-				if(checkAllUserInputs() == true) {
-					long startTime = System.currentTimeMillis();
-					LOG.outputConsole("START: Link Marriage Parents To Marriage Parents");
-					linkMarriageParentsToMarriageParents();
-					LOG.outputTotalRuntime("Link Marriage Parents To Marriage Parents", startTime, true);
-				}
-				break;
+//			case "linksiblings":
+//				if(checkAllUserInputs() == true) {
+//					long startTime = System.currentTimeMillis();
+//					LOG.outputConsole("START: Link Siblings");
+//					linkSiblings();
+//					LOG.outputTotalRuntime("Link Siblings", startTime, true);
+//				}
+//				break;
+//			case "linkmarriageparentstomarriageparents":
+//				if(checkAllUserInputs() == true) {
+//					long startTime = System.currentTimeMillis();
+//					LOG.outputConsole("START: Link Marriage Parents To Marriage Parents");
+//					linkMarriageParentsToMarriageParents();
+//					LOG.outputTotalRuntime("Link Marriage Parents To Marriage Parents", startTime, true);
+//				}
+//				break;
 			default:
 				LOG.logError("runProgram", "User input is correct, but no corresponding function exists (error in code)");
 				break;
@@ -208,7 +205,7 @@ public class Controller {
 	}
 
 
-	public void linkNewbornToPartner() {
+	public void Within_B_M() {
 		String dirName = function + "-maxLev" + maxLev;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
@@ -218,18 +215,18 @@ public class Controller {
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
-				new ProcessNewbornToPartner(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				new Within_B_M(myHDT, mainDirectory, maxLev, outputFormatRDF);
 				myHDT.closeDataset();
 			} else {
-				LOG.logError("linkNewbornToPartner", "Error in creating the three sub output directories");
+				LOG.logError("Within_B_M", "Error in creating the three sub output directories");
 			}
 		} else {
-			LOG.logError("linkNewbornToPartner", "Error in creating the main output directory");
+			LOG.logError("Within_B_M", "Error in creating the main output directory");
 		}
 	}
 
 
-	public void linkPartnerToPartner() {
+	public void Between_M_M() {
 		String dirName = function + "-maxLev" + maxLev;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
@@ -239,55 +236,59 @@ public class Controller {
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
-				new ProcessPartnerToPartner(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				new Between_M_M(myHDT, mainDirectory, maxLev, outputFormatRDF);
 				myHDT.closeDataset();
 			} else {
-				LOG.logError("linkPartnerToPartner", "Error in creating the three sub output directories");
+				LOG.logError("Between_M_M", "Error in creating the three sub output directories");
 			}
 		} else {
-			LOG.logError("linkPartnerToPartner", "Error in creating the main output directory");
-		}
-	}
-
-	public void linkSiblings() {
-		String dirName = function + "-maxLev" + maxLev;
-		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
-		if(processDirCreated == true) {
-			String mainDirectory = outputDirectory + "/" + dirName;
-			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
-			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
-			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
-			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
-				MyHDT myHDT = new MyHDT(inputDataset);	
-				new ProcessSiblings(myHDT, mainDirectory, maxLev, outputFormatRDF);
-				myHDT.closeDataset();
-			} else {
-				LOG.logError("linkSiblings", "Error in creating the three sub output directories");
-			}
-		} else {
-			LOG.logError("linkSiblings", "Error in creating the main output directory");
+			LOG.logError("Between_M_M", "Error in creating the main output directory");
 		}
 	}
 	
-	public void linkMarriageParentsToMarriageParents() {
-		String dirName = function + "-maxLev" + maxLev;
-		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
-		if(processDirCreated == true) {
-			String mainDirectory = outputDirectory + "/" + dirName;
-			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
-			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
-			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
-			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
-				MyHDT myHDT = new MyHDT(inputDataset);	
-				new ProcessMarriageParentsToMarriageParents(myHDT, mainDirectory, maxLev, outputFormatRDF);
-				myHDT.closeDataset();
-			} else {
-				LOG.logError("linkMarriageParentsToMarriageParents", "Error in creating the three sub output directories");
-			}
-		} else {
-			LOG.logError("linkMarriageParentsToMarriageParents", "Error in creating the main output directory");
-		}
-	}
+	
+	
+	
+
+//	public void linkSiblings() {
+//		String dirName = function + "-maxLev" + maxLev;
+//		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
+//		if(processDirCreated == true) {
+//			String mainDirectory = outputDirectory + "/" + dirName;
+//			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
+//			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
+//			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
+//			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
+//				MyHDT myHDT = new MyHDT(inputDataset);	
+//				//new ProcessSiblings(myHDT, mainDirectory, maxLev, outputFormatRDF);
+//				myHDT.closeDataset();
+//			} else {
+//				LOG.logError("linkSiblings", "Error in creating the three sub output directories");
+//			}
+//		} else {
+//			LOG.logError("linkSiblings", "Error in creating the main output directory");
+//		}
+//	}
+//	
+//	public void linkMarriageParentsToMarriageParents() {
+//		String dirName = function + "-maxLev" + maxLev;
+//		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
+//		if(processDirCreated == true) {
+//			String mainDirectory = outputDirectory + "/" + dirName;
+//			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
+//			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
+//			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
+//			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
+//				MyHDT myHDT = new MyHDT(inputDataset);	
+//				//new ProcessMarriageParentsToMarriageParents(myHDT, mainDirectory, maxLev, outputFormatRDF);
+//				myHDT.closeDataset();
+//			} else {
+//				LOG.logError("linkMarriageParentsToMarriageParents", "Error in creating the three sub output directories");
+//			}
+//		} else {
+//			LOG.logError("linkMarriageParentsToMarriageParents", "Error in creating the main output directory");
+//		}
+//	}
 
 
 

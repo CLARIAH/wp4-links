@@ -337,7 +337,7 @@ public class MyHDT {
 				return Integer.parseInt(bits[0].replace("\"", ""));
 			}
 		} catch (NotFoundException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return 0;
 	}
@@ -371,7 +371,12 @@ public class MyHDT {
 			e.printStackTrace();
 		}
 		return null;
-
+	}
+	
+	
+	public String getEventURIfromID(String eventID, String prov) {
+		
+		return PREFIX_IISG  + "event/" + eventID;
 
 		// Of course the more correct way would be to query the HDT file and get the event URI from the registration ID		
 		//return PREFIX_IISG + typeEvent + "/" + eventID;

@@ -1,5 +1,14 @@
 package iisg.amsterdam.wp4_links;
 
+import static iisg.amsterdam.wp4_links.Properties.DIRECTORY_NAME_DATABASE;
+import static iisg.amsterdam.wp4_links.Properties.DIRECTORY_NAME_DICTIONARY;
+
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.rocksdb.RocksDBException;
@@ -9,18 +18,7 @@ import com.github.liblevenshtein.transducer.Candidate;
 import iisg.amsterdam.wp4_links.utilities.FileUtilities;
 import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 
-import static iisg.amsterdam.wp4_links.Properties.*;
-
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Map.Entry;
-
 public class Index {
-
 
 	private String indexID;
 	private String directoryDB;
@@ -29,9 +27,8 @@ public class Index {
 	private BufferedOutputStream streamDictionary;
 	private MyTransducer myTransducer;
 	private final String eventID_matchedNames_separator = ":";
-
-	//	private Boolean indexStatus = false;
-
+	private final int flush_limit = 50;
+	private int counterDictionary = 0;
 
 	public static final Logger lg = LogManager.getLogger(Index.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
@@ -94,8 +91,12 @@ public class Index {
 
 	public void addToMyDictionary(String message) {
 		FILE_UTILS.writeToOutputStream(streamDictionary, message);
+		counterDictionary++;
+		if(counterDictionary == flush_limit) {
+			flushDictionary();
+			counterDictionary = 0;
+		}
 	}
-
 
 	public Boolean flushDictionary() {
 		try {
@@ -120,31 +121,32 @@ public class Index {
 	}
 
 
-	//	// here I can change this function to also decompose the first name into several entries
-	//	public Boolean addPersonToIndex(Person person, String eventID) {
-	//		try {
-	//			String fullName = person.getFullName();
-	//			addToMyDictionary(fullName);
-	//			addListValueToMyDB(fullName, eventID);
-	//			return true;
-	//		} catch (Exception e) {
-	//			LOG.logError("addPersonToIndex", "Error adding person: " + person + " of eventID: " + eventID + " to index: " + indexID);
-	//		}
-	//		return false;
-	//	}
-
-	
 	public Boolean addPersonToIndex(Person person, String eventID) {
 		try {
-			//String fullName = person.getFullName();
-
-			HashMap<String,String> fullNameCombinations = person.getPossibleFullNameCombinations();
-
-			for(Entry<String,String> e: fullNameCombinations.entrySet()) {
-				addToMyDictionary(e.getKey());
-				String value = eventID + eventID_matchedNames_separator + e.getValue();
-				addListValueToMyDB(e.getKey(), value);
-			}		
+			Set<String> fullNameVariations = person.decomposeFirstnameAddLastName();
+			int numberOfFirstNames = fullNameVariations.size();
+			for(String fullname: fullNameVariations) {
+				addToMyDictionary(fullname);
+				String value = eventID + eventID_matchedNames_separator + numberOfFirstNames;
+				addListValueToMyDB(fullname, value);
+			}	
+			return true;
+		} catch (Exception e) {
+			LOG.logError("addPersonToIndex", "Error adding person: " + person + " of eventID: " + eventID + " to index: " + indexID);
+		}
+		return false;
+	}
+	
+	public Boolean addPersonToIndex(Person person, String eventID, String numberOfIndividuals) {
+		try {
+			Set<String> fullNameVariations = person.decomposeFirstnameAddLastName();
+			int numberOfFirstNames = fullNameVariations.size();
+			for(String fullname: fullNameVariations) {
+				addToMyDictionary(fullname);
+				String value = eventID + eventID_matchedNames_separator + numberOfFirstNames 
+						+ eventID_matchedNames_separator + numberOfIndividuals;
+				addListValueToMyDB(fullname, value);
+			}	
 			return true;
 		} catch (Exception e) {
 			LOG.logError("addPersonToIndex", "Error adding person: " + person + " of eventID: " + eventID + " to index: " + indexID);
@@ -153,37 +155,42 @@ public class Index {
 	}
 
 
-	public ArrayList<Candidate> searchFullNameInTransducer(Person person) {
+	public ArrayList<Candidate> searchFullNameInTransducer(String fullName) {
 		ArrayList<Candidate> result = new ArrayList<Candidate>();
 		try {
-			if(person.hasFullName()) {			
-				String fullName = person.getFullName();
-				Iterable<Candidate> candidates = myTransducer.transducer.transduce(fullName, myTransducer.maxLevDistance);
-				for(Candidate cand: candidates) {
-					result.add(cand);
-				}		
-				return result;
-			}
+			Iterable<Candidate> candidates = myTransducer.transducer.transduce(fullName, myTransducer.maxLevDistance);
+			for(Candidate cand: candidates) {
+				result.add(cand);
+			}		
+			return result;
 		} catch (Exception e) {
-			LOG.logError("searchFullNameInTransducer", "Error searching for full name of person: " + person + " in index: " + indexID);
+			LOG.logError("searchFullNameInTransducer", "Error searching for full name of person: " + fullName + " in index: " + indexID);
 		}
 		return result;
 	}
 
-	public HashMap<String, Candidate> findCandidatesInDB(ArrayList<Candidate> candidates) {
-		HashMap<String, Candidate> results = new HashMap<String, Candidate>();
-		for(Candidate cand: candidates) {
-			ArrayList<String> allCandEventsID = getListFromDB(cand.term()); 
-			for(String canEventID: allCandEventsID) {		
-				results.put(canEventID, cand);
+
+	public CandidateList searchForCandidate(Person person, String sourceCertificateID) {
+		CandidateList candidateList = new CandidateList(person, sourceCertificateID);
+		Set<String> fullNameVariations = person.decomposeFirstnameAddLastName();
+		for(String fullNameVariation: fullNameVariations) {
+			ArrayList<Candidate> initial_candidates = searchFullNameInTransducer(fullNameVariation);
+			for(Candidate cand: initial_candidates) {
+				ArrayList<String> candidateCertificatesIDList = getListFromDB(cand.term()); 
+				for(String candCertificateID: candidateCertificatesIDList) {		
+					String[] certificate = candCertificateID.split(":");
+					if(certificate.length == 3) {
+						candidateList.addCandidate(certificate[0], certificate[1], fullNameVariation, certificate[2], cand);
+					} else {
+						candidateList.addCandidate(certificate[0], certificate[1], "", fullNameVariation, cand);
+					}
+					
+				}
 			}
 		}
-		return results;
+		return candidateList;
 	}
-	
-	public HashMap<String, Candidate> searchFullNameInTransducerAndDB(Person person) {
-		return findCandidatesInDB(searchFullNameInTransducer(person));
-	}
+
 
 
 	public HashMap<String, String> getIntersectedCandidateEvents(HashMap<String, Candidate> candidatesRole1, HashMap<String, Candidate> candidatesRole2) {
@@ -204,9 +211,9 @@ public class Index {
 		}
 		return result;		
 	}
-	
-	
-	
+
+
+
 	public HashMap<String,String> separateEventFromMeta(Set<String> events){
 		HashMap<String, String> result = new HashMap<String, String>();
 		for(String eventWithMeta: events) {
@@ -215,9 +222,5 @@ public class Index {
 		}
 		return result;
 	}
-
-
-	
-
 
 }
