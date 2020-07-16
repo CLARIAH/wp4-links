@@ -11,10 +11,10 @@ Code for linking all Dutch civil registries. It's purpose, use case, technical f
   - ```cat birth-registrations.nq birth-persons.nq marriage-registrations.nq marriage-persons.nq > all-civil-registries.nq```
 
 3. Install JAVA Runtime Environment (JRE), which is almost installed in every computer these days
-  --> Free download: https://www.oracle.com/java/technologies/javase-jre8-downloads.html
+  - Free [download](https://www.oracle.com/java/technologies/javase-jre8-downloads.html) from Oracle.
 
 4. Convert the large RDF file to HDT (this process might require a lot of memory usage depending on the dataset size).
-  - ```nohup rdf2hdt all-civil-registries.nq all-civil-registries.hdt -i -p &```
+  - ```nohup rdf2hdt all-civil-registries.nq all-civil-registries.hdt -i -p &``` (-i for also creating the index to speed-up the reading)
   - Or using the function `convertToHDT` in the linking tool
 
 5. Start linking from terminal :)
