@@ -60,7 +60,7 @@ public class Within_B_M {
 		link_within_B_M("f", false);
 		link_within_B_M("m", true);
 	}
-	
+
 
 
 
@@ -122,8 +122,7 @@ public class Within_B_M {
 														}
 													}
 													if(link == true) { // if one of them does not have a father, we match on two individuals
-														// String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "123");
-														String marriageEventURI = myHDT.getEventURIfromID(finalCandidate);
+														String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "direct");
 														int yearDifference = checkTimeConsistency_Within_B_M(birthYear, marriageEventURI);
 														if(yearDifference > -1) { // if it fits the time line
 															Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);
@@ -146,8 +145,7 @@ public class Within_B_M {
 														}
 													}
 													if(link == true) { // if one of them does not have a mother, we match on two individuals
-														// String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "146");
-														String marriageEventURI = myHDT.getEventURIfromID(finalCandidate);
+														String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "direct");
 														int yearDifference = checkTimeConsistency_Within_B_M(birthYear, marriageEventURI);
 														if(yearDifference > -1) { // if it fits the time line
 															Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);		
@@ -162,8 +160,7 @@ public class Within_B_M {
 											if(candidatesMother.candidates.isEmpty() == false && candidatesFather.candidates.isEmpty() == false) {
 												Set<String> finalCandidatesMotherFather = candidatesPartner.findIntersectionCandidates(candidatesMother, candidatesFather);
 												for(String finalCandidate: finalCandidatesMotherFather) {
-													// String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "161");
-													String marriageEventURI = myHDT.getEventURIfromID(finalCandidate);
+													String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "direct");
 													int yearDifference = checkTimeConsistency_Within_B_M(birthYear, marriageEventURI);
 													if(yearDifference > -1) { // if it fits the time line
 														Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);
@@ -176,73 +173,6 @@ public class Within_B_M {
 										}
 									}
 								}
-
-
-
-
-
-
-								//								if(mother.isValidWithFullName()){
-								//									candidatesPartner = indexPartner.searchForCandidate(newborn, birthEventID);
-								//									if(candidatesPartner.candidates.isEmpty() == false) {
-								//										candidatesMother = indexMother.searchForCandidate(mother, birthEventID);
-								//										if(father.isValidWithFullName()){
-								//											candidatesFather = indexFather.searchForCandidate(father, birthEventID);
-								//											finalCandidatesList = candidatesPartner.findIntersectionCandidates(candidatesMother, candidatesFather);
-								//										} else {
-								//											finalCandidatesList = candidatesPartner.findIntersectionCandidates(candidatesMother);
-								//										}
-								//									}
-								//								} else {
-								//									if(father.isValidWithFullName()){
-								//										candidatesPartner = indexPartner.searchForCandidate(newborn, birthEventID);
-								//										if(candidatesPartner.candidates.isEmpty() == false) {
-								//											candidatesFather = indexFather.searchForCandidate(father, birthEventID);
-								//											finalCandidatesList = candidatesPartner.findIntersectionCandidates(candidatesFather);
-								//										}
-								//									} 
-								//								}
-								//								if(finalCandidatesList != null) {
-								//									for(String finalCandidate: finalCandidatesList) {
-								//										String marriageEventURI = myHDT.getEventURIfromID(finalCandidate);
-								//										int yearDifference = checkTimeConsistency_Within_B_M(birthYear, marriageEventURI);
-								//										if(yearDifference > -1) { // if it fits the time line
-								//											Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);
-								//											Person partner_mother = myHDT.getPersonInfo(marriageEventURI, rolePartnerMother);
-								//											Person partner_father = myHDT.getPersonInfo(marriageEventURI, rolePartnerFather);	
-								//											LINKS.saveLinks_Within_B_M(candidatesPartner, candidatesMother, candidatesFather, finalCandidate, partner, partner_mother, partner_father, familyCode, yearDifference);																				
-								//										}
-								//									}
-								//								}
-
-
-
-
-
-
-								//								if(mother.isValidWithFullName() && father.isValidWithFullName()) {
-								//									// start linking here
-								//									CandidateList candidatesPartner = indexPartner.searchForCandidate(newborn, birthEventID);
-								//									if(candidatesPartner.candidates.isEmpty() == false) {
-								//										CandidateList candidatesMother = indexMother.searchForCandidate(mother, birthEventID);
-								//										if(candidatesMother.candidates.isEmpty() == false) {
-								//											CandidateList candidatesFather = indexFather.searchForCandidate(father, birthEventID);
-								//											if(candidatesFather.candidates.isEmpty() == false) {
-								//												Set<String> finalCandidatesList = candidatesPartner.findIntersectionCandidates(candidatesMother, candidatesFather);
-								//												for(String finalCandidate: finalCandidatesList) {
-								//													String marriageEventURI = myHDT.getEventURIfromID(finalCandidate);
-								//													int yearDifference = checkTimeConsistency_Within_B_M(birthYear, marriageEventURI);
-								//													if(yearDifference > -1) { // if it fits the time line
-								//														Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);
-								//														Person partner_mother = myHDT.getPersonInfo(marriageEventURI, rolePartnerMother);
-								//														Person partner_father = myHDT.getPersonInfo(marriageEventURI, rolePartnerFather);	
-								//														LINKS.saveLinks_Within_B_M(candidatesPartner, candidatesMother, candidatesFather, finalCandidate, partner, partner_mother, partner_father, familyCode, yearDifference);																				
-								//													}
-								//												}
-								//											}
-								//										}
-								//									}
-								//								}
 							}
 						}
 						if(cntAll % 10000 == 0) {
