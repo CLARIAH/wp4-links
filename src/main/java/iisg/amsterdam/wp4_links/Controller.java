@@ -14,7 +14,7 @@ import static iisg.amsterdam.wp4_links.Properties.*;
 public class Controller {
 
 	final String[] FUNCTIONS = {"showDatasetStats", "convertToHDT", "within_b_m", 
-			"between_m_m"};
+			"between_b_m", "between_m_m"};
 
 	private String function,inputDataset,outputDirectory;
 	private int maxLev;
@@ -58,6 +58,14 @@ public class Controller {
 					LOG.outputConsole("START: Within Births-Marriages (i.e. newborn --> partner)");
 					Within_B_M();
 					LOG.outputTotalRuntime("Within Births-Marriages (i.e. newborn --> partner)", startTime, true);
+				}
+				break;
+			case "between_b_m":
+				if(checkAllUserInputs() == true) {
+					long startTime = System.currentTimeMillis();
+					LOG.outputConsole("START: Between Births-Marriages (i.e. newborn parents --> partners)");
+					Between_B_M();
+					LOG.outputTotalRuntime("Between Births-Marriages (i.e. newborn parents --> partners)", startTime, true);
 				}
 				break;
 			case "between_m_m":
@@ -206,7 +214,7 @@ public class Controller {
 
 
 	public void Within_B_M() {
-		String dirName = function + "-maxLev" + maxLev;
+		String dirName = function + "-maxLev-" + maxLev;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
 			String mainDirectory = outputDirectory + "/" + dirName;
@@ -224,10 +232,31 @@ public class Controller {
 			LOG.logError("Within_B_M", "Error in creating the main output directory");
 		}
 	}
+	
+	
+	public void Between_B_M() {
+		String dirName = function + "-maxLev-" + maxLev;
+		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
+		if(processDirCreated == true) {
+			String mainDirectory = outputDirectory + "/" + dirName;
+			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
+			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
+			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
+			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
+				MyHDT myHDT = new MyHDT(inputDataset);	
+				new Between_B_M(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				myHDT.closeDataset();
+			} else {
+				LOG.logError("Between_B_M", "Error in creating the three sub output directories");
+			}
+		} else {
+			LOG.logError("Between_B_M", "Error in creating the main output directory");
+		}
+	}
 
 
 	public void Between_M_M() {
-		String dirName = function + "-maxLev" + maxLev;
+		String dirName = function + "-maxLev-" + maxLev;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
 			String mainDirectory = outputDirectory + "/" + dirName;

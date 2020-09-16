@@ -35,34 +35,6 @@ public class CandidateCertificate {
 
 	}
 
-	//	public void addMatchedName(Person sourcePerson, Candidate candidate) {
-	//		// if last names are equal then add the levensthein distances (i.e. next line)		
-	//		numberMatchedNames++;
-	//		String[] candidatefullName = candidate.term().split(sourcePerson.names_separator);
-	//		if(sourcePerson.getLastName().equals(candidatefullName[1])) {
-	//			levenshteinTotal = levenshteinTotal + candidate.distance();
-	//			if(candidate.distance() > maximumMatchedLevenshtein) {
-	//				maximumMatchedLevenshtein = candidate.distance();
-	//			}
-	//		}
-	//	}
-
-	//	public void addMatchedName(Person sourcePerson, String sourceFullName, Candidate candidate) {
-	//
-	//		if(!levenshteinPerName.containsKey(sourceFullName)) {
-	//			if(!consideredNames.contains(candidate.term())) {
-	//				levenshteinPerName.put(sourceFullName, candidate);
-	//				consideredNames.add(candidate.term());
-	//			}
-	//		} else {
-	//			Candidate storedCand = levenshteinPerName.get(sourceFullName);
-	//			if(candidate.distance() < storedCand.distance()) {
-	//				consideredNames.remove(storedCand.term());
-	//				consideredNames.add(candidate.term());
-	//				levenshteinPerName.put(sourceFullName, candidate);
-	//			}
-	//		}	
-	//	}
 
 	public void addMatchedName(Person sourcePerson, String sourceFullName, Candidate candidate) {
 		if(levenshteinPerName.containsKey(sourceFullName)) {

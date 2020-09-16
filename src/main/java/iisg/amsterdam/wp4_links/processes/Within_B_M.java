@@ -19,6 +19,8 @@ import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 
+// Within_B_M: link newborns in Birth Certificates to brides/grooms in Marriage Certificates (reconstructs life course)
+
 public class Within_B_M {
 	private String mainDirectoryPath, processName = "";;
 	private MyHDT myHDT;
@@ -124,7 +126,7 @@ public class Within_B_M {
 													if(link == true) { // if one of them does not have a father, we match on two individuals
 														String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "direct");
 														int yearDifference = checkTimeConsistency_Within_B_M(birthYear, marriageEventURI);
-														if(yearDifference > -1) { // if it fits the time line
+														if(yearDifference < 999) { // if it fits the time line
 															Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);
 															Person partner_mother = myHDT.getPersonInfo(marriageEventURI, rolePartnerMother);
 															LINKS.saveLinks_Within_B_M_mother(candidatesPartner, candidatesMother, finalCandidate, partner, partner_mother, familyCode, yearDifference);																				
@@ -147,7 +149,7 @@ public class Within_B_M {
 													if(link == true) { // if one of them does not have a mother, we match on two individuals
 														String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "direct");
 														int yearDifference = checkTimeConsistency_Within_B_M(birthYear, marriageEventURI);
-														if(yearDifference > -1) { // if it fits the time line
+														if(yearDifference < 999) { // if it fits the time line
 															Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);		
 															Person partner_father = myHDT.getPersonInfo(marriageEventURI, rolePartnerFather);
 															LINKS.saveLinks_Within_B_M_father(candidatesPartner, candidatesFather, finalCandidate, partner, partner_father, familyCode, yearDifference);																				
@@ -162,7 +164,7 @@ public class Within_B_M {
 												for(String finalCandidate: finalCandidatesMotherFather) {
 													String marriageEventURI = myHDT.getEventURIfromID(finalCandidate, "direct");
 													int yearDifference = checkTimeConsistency_Within_B_M(birthYear, marriageEventURI);
-													if(yearDifference > -1) { // if it fits the time line
+													if(yearDifference < 999) { // if it fits the time line
 														Person partner = myHDT.getPersonInfo(marriageEventURI, rolePartner);
 														Person partner_mother = myHDT.getPersonInfo(marriageEventURI, rolePartnerMother);
 														Person partner_father = myHDT.getPersonInfo(marriageEventURI, rolePartnerFather);	
@@ -298,7 +300,7 @@ public class Within_B_M {
 		if(diff >= MIN_YEAR_DIFF && diff < MAX_YEAR_DIFF) {
 			return diff;
 		} else {
-			return -1;
+			return 999;
 		}
 	}
 

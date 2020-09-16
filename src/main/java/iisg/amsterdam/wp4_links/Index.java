@@ -182,7 +182,7 @@ public class Index {
 					if(certificate.length == 3) {
 						candidateList.addCandidate(certificate[0], certificate[1], fullNameVariation, certificate[2], cand);
 					} else {
-						candidateList.addCandidate(certificate[0], certificate[1], "", fullNameVariation, cand);
+						candidateList.addCandidate(certificate[0], certificate[1], fullNameVariation, "", cand);
 					}
 					
 				}

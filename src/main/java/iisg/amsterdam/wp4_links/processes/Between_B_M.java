@@ -22,14 +22,14 @@ import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 
-// Between_M_M: link parents of brides/grooms in Marriage Certificates to brides and grooms in Marriage Certificates (reconstructs family ties)
+// Between_B_M: link parents of newborns in Birth Certificates to brides and grooms in Marriage Certificates (reconstructs family ties)
 
-public class Between_M_M {
+public class Between_B_M {
 
 	// output directory specified by the user + name of the called function
 	private String mainDirectoryPath, processName = "";;
 	private MyHDT myHDT;
-	private final int MIN_YEAR_DIFF = 14, MAX_YEAR_DIFF = 100, indexingUpdateInterval = 2000, linkingUpdateInterval = 10000;
+	private final int MIN_YEAR_DIFF = -10, MAX_YEAR_DIFF = 36, indexingUpdateInterval = 2000, linkingUpdateInterval = 10000;
 	private int maxLev;
 	Index indexBride, indexGroom;
 
@@ -37,15 +37,14 @@ public class Between_M_M {
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 	LinksCSV LINKS;
 
-	public Between_M_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean formatRDF) {
+	public Between_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean formatRDF) {
 		this.mainDirectoryPath = directoryPath;
 		this.maxLev = maxLevenshtein;
 		this.myHDT = hdt;
-		String resultsFileName = "between-M-M-maxLev-" + maxLevenshtein;
+		String resultsFileName = "between-B-M-maxLev-" + maxLevenshtein;
 		if(formatRDF == false) {
-			String header = "id_certificate_parents,"
+			String header = "id_certificate_newbornParents,"
 					+ "id_certificate_partners,"
-					+ "family_line,"
 					+ "levenshtein_total_bride,"
 					+ "levenshtein_max_bride,"
 					+ "levenshtein_total_groom,"
@@ -59,19 +58,18 @@ public class Between_M_M {
 					+ "year_diff";
 			LINKS = new LinksCSV(resultsFileName, mainDirectoryPath, header);
 		}
-		link_between_M_M();
+		link_between_B_M();
 	}
 
-	public void link_between_M_M() {
+	public void link_between_B_M() {
 		Boolean success = generateCouplesIndex();
 		if(success == true) {	
 			indexBride.createTransducer(maxLev);
 			indexGroom.createTransducer(maxLev);
 			try {
 				int cntAll =0 ;
-				String familyCode = "";
 				// iterate through the marriage certificates to link it to the marriage dictionaries
-				IteratorTripleString it = myHDT.dataset.search("", ROLE_BRIDE, "");
+				IteratorTripleString it = myHDT.dataset.search("", ROLE_NEWBORN, "");
 				long estNumber = it.estimatedNumResults();
 				LOG.outputConsole("Estimated number of certificates to be linked is: " + estNumber);	
 				String taskName = "Linking " + processName;
@@ -81,43 +79,30 @@ public class Between_M_M {
 					while(it.hasNext()) {	
 						TripleString ts = it.next();	
 						cntAll++;
-						String marriageEvent = ts.getSubject().toString();	
-						String marriageEventID = myHDT.getIDofEvent(marriageEvent);
-						int marriageEventYear = myHDT.getEventDate(marriageEvent);
-						Person mother, father;			
-						for(int i=0; i<2; i++) {
-							mother = null; father = null;   
-							if(i==0) {
-								// bride's parents
-								mother = myHDT.getPersonInfo(marriageEvent, ROLE_BRIDE_MOTHER);
-								father = myHDT.getPersonInfo(marriageEvent, ROLE_BRIDE_FATHER);
-								familyCode = "21";
-							} else {
-								// groom's parents
-								mother = myHDT.getPersonInfo(marriageEvent, ROLE_GROOM_MOTHER);
-								father = myHDT.getPersonInfo(marriageEvent, ROLE_GROOM_FATHER);;
-								familyCode = "22";
-							}
-							if(mother.isValidWithFullName() && father.isValidWithFullName()) {
-								// start linking here
-								CandidateList candidatesGroom = indexGroom.searchForCandidate(father, marriageEventID);
-								if(candidatesGroom.candidates.isEmpty() == false) {
-									CandidateList candidatesBride = indexBride.searchForCandidate(mother, marriageEventID);
-									if(candidatesBride.candidates.isEmpty() == false) {
-										Set<String> finalCandidatesList = candidatesBride.findIntersectionCandidates(candidatesGroom);
-										for(String finalCandidate: finalCandidatesList) {
-											String marriageEventAsCoupleURI = myHDT.getEventURIfromID(finalCandidate);
-											int yearDifference = checkTimeConsistencyMarriageToMarriage(marriageEventYear, marriageEventAsCoupleURI);
-											if(yearDifference < 999) { // if it fits the time line
-												Person bride = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_BRIDE);
-												Person groom = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_GROOM);	
-												LINKS.saveLinks_Between_M_M(candidatesBride, candidatesGroom, finalCandidate, bride, groom, familyCode, yearDifference);																				
-											}
+						String birthEvent = ts.getSubject().toString();	
+						String birthEventID = myHDT.getIDofEvent(birthEvent);
+						int birthEventYear = myHDT.getEventDate(birthEvent);
+						Person mother = myHDT.getPersonInfo(birthEvent, ROLE_MOTHER);
+						Person father = myHDT.getPersonInfo(birthEvent, ROLE_FATHER);				
+						if(mother.isValidWithFullName() && father.isValidWithFullName()) {
+							// start linking here
+							CandidateList candidatesGroom = indexGroom.searchForCandidate(father, birthEventID);
+							if(candidatesGroom.candidates.isEmpty() == false) {
+								CandidateList candidatesBride = indexBride.searchForCandidate(mother, birthEventID);
+								if(candidatesBride.candidates.isEmpty() == false) {
+									Set<String> finalCandidatesList = candidatesBride.findIntersectionCandidates(candidatesGroom);
+									for(String finalCandidate: finalCandidatesList) {
+										String marriageEventAsCoupleURI = myHDT.getEventURIfromID(finalCandidate, "direct");
+										int yearDifference = checkTimeConsistency_between_b_m(birthEventYear, marriageEventAsCoupleURI);
+										if(yearDifference < 999) { // if it fits the time line
+											Person bride = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_BRIDE);
+											Person groom = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_GROOM);	
+											LINKS.saveLinks_Between_B_M(candidatesBride, candidatesGroom, finalCandidate, bride, groom, yearDifference);																				
 										}
 									}
 								}
-							}								
-						}
+							}
+						}								
 						if(cntAll % 10000 == 0) {
 							pb.stepBy(10000);
 						}
@@ -126,7 +111,7 @@ public class Between_M_M {
 					pb.close();
 				}
 			} catch (Exception e) {
-				LOG.logError("link_between_M_M", "Error in linking partners to partners in process " + processName);
+				LOG.logError("link_between_B_M", "Error in linking parents of newborns to partners in process " + processName);
 				e.printStackTrace();
 			} finally {
 				LINKS.closeStream();
@@ -198,10 +183,10 @@ public class Between_M_M {
 	 * @param candidateMarriageEvent
 	 *            marriage event URI            
 	 */
-	public int checkTimeConsistencyMarriageToMarriage(int marriageAsParentsYear, String marriageAsCouple) {
+	public int checkTimeConsistency_between_b_m(int birthYearAsParents, String marriageAsCouple) {
 		int marriageAsCoupleYear = myHDT.getEventDate(marriageAsCouple);
-		int diff = marriageAsParentsYear - marriageAsCoupleYear;
-		if(diff >= MIN_YEAR_DIFF && diff < MAX_YEAR_DIFF) {
+		int diff = birthYearAsParents - marriageAsCoupleYear;
+		if(diff >= MIN_YEAR_DIFF && diff <= MAX_YEAR_DIFF) {
 			return diff;
 		} else {
 			return 999;

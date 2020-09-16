@@ -74,6 +74,32 @@ public class LinksCSV {
 			flushLinks();
 		}
 	}
+	
+	public void saveLinks_Between_B_M(CandidateList motherList, CandidateList fatherList, String targetCertificateID, Person bride, Person groom, int yearDifference) {		
+
+		HashMap<String, Candidate> motherPairedNames = motherList.candidates.get(targetCertificateID).organiseMetadata();
+		HashMap<String, Candidate> fatherPairedNames = fatherList.candidates.get(targetCertificateID).organiseMetadata();
+
+		String link =  motherList.sourceCertificateID + "," + // source certificateID
+				targetCertificateID + "," + // target CertificateID
+
+				motherList.candidates.get(targetCertificateID).levenshteinTotal + "," + // levenshtein total bride
+				motherList.candidates.get(targetCertificateID).maximumMatchedLevenshtein + "," + // max levenshtein bride
+
+				fatherList.candidates.get(targetCertificateID).levenshteinTotal + "," + // levenshtein total groom
+				fatherList.candidates.get(targetCertificateID).maximumMatchedLevenshtein + "," + // max levenshtein groom
+
+				motherPairedNames.size() + "," + // number of matched names for the bride
+				motherList.sourcePerson.getNumberOfFirstNames() + "," + // number of total names for the mother
+				motherList.candidates.get(targetCertificateID).numberNames + "," + // number of total names for the bride
+
+				fatherPairedNames.size() + "," + // number of matched names for the groom
+				fatherList.sourcePerson.getNumberOfFirstNames() + "," + // number of total names for the father
+				fatherList.candidates.get(targetCertificateID).numberNames + "," + // number of total names for the groom
+
+				yearDifference ;
+		addToStream(link);
+	}
 
 
 	public void saveLinks_Between_M_M(CandidateList motherList, CandidateList fatherList, String targetCertificateID, Person bride, Person groom, String familyLine, int yearDifference) {		
