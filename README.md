@@ -20,5 +20,7 @@ Code for linking all Dutch civil registries. It's purpose, use case, technical f
 5. Start linking from terminal :)
   - ```java -jar links.jar```
 
-## Example for linking all marriage certificates with a maximum Levenshtein of 1
-```java -jar links.jar --function Between_M_M --maxLev 1 --format CSV --inputData all-civil-registries.hdt --outputDir .```
+## Need some help regarding the input/output of the tool?
+You can open your terminal, and ask our tool for help:
+
+  ```java -jar links.jar --help```
