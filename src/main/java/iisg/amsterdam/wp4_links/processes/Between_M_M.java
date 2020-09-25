@@ -31,18 +31,24 @@ public class Between_M_M {
 	private MyHDT myHDT;
 	private final int MIN_YEAR_DIFF = 14, MAX_YEAR_DIFF = 100, indexingUpdateInterval = 2000, linkingUpdateInterval = 10000;
 	private int maxLev;
+	private Boolean fixedLev;
 	Index indexBride, indexGroom;
 
 	public static final Logger lg = LogManager.getLogger(Between_M_M.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 	LinksCSV LINKS;
 
-	public Between_M_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean formatRDF) {
+	public Between_M_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean formatCSV) {
 		this.mainDirectoryPath = directoryPath;
 		this.maxLev = maxLevenshtein;
+		this.fixedLev = fixedLev;
 		this.myHDT = hdt;
-		String resultsFileName = "between-M-M-maxLev-" + maxLevenshtein;
-		if(formatRDF == false) {
+		String fixed = "";
+		if(fixedLev == true) {
+			fixed = "-fixed";
+		}
+		String resultsFileName = "between-M-M-maxLev-" + maxLevenshtein + fixed;
+		if(formatCSV == true) {
 			String header = "id_certificate_parents,"
 					+ "id_certificate_partners,"
 					+ "family_line,"
@@ -65,8 +71,8 @@ public class Between_M_M {
 	public void link_between_M_M() {
 		Boolean success = generateCouplesIndex();
 		if(success == true) {	
-			indexBride.createTransducer(maxLev);
-			indexGroom.createTransducer(maxLev);
+			indexBride.createTransducer();
+			indexGroom.createTransducer();
 			try {
 				int cntAll =0 ;
 				String familyCode = "";
@@ -140,8 +146,8 @@ public class Between_M_M {
 		int cntInserts=0, cntAll =0 ;
 		IteratorTripleString it;
 		processName = "Couples";
-		indexBride = new Index("bride", mainDirectoryPath);
-		indexGroom = new Index("groom", mainDirectoryPath);
+		indexBride = new Index("bride", mainDirectoryPath, maxLev, fixedLev);
+		indexGroom = new Index("groom", mainDirectoryPath, maxLev, fixedLev);
 		LOG.outputConsole("START: Generating Dictionary for " + processName);
 		try {
 			indexBride.openIndex();

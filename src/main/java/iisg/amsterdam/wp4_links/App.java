@@ -43,7 +43,10 @@ public class App
 	String function = null;
 
 	@Parameter(names = "--maxLev")
-	int maxLev = 99;
+	int maxLev = 4;
+
+	@Parameter(names = "--fixedLev")
+	boolean fixedLev = false; 
 
 	@Parameter(names = "--inputData")
 	String inputData = null;
@@ -52,7 +55,7 @@ public class App
 	String outputDir = null;
 
 	@Parameter(names = "--format")
-	String format = "RDF"; // or "CSV"
+	String format = "CSV"; // or "RDF"
 
 	@Parameter(names = "--help", help = true)
 	boolean help;
@@ -78,7 +81,7 @@ public class App
 		// default option is to show only errors 
 		// BasicConfigurator.configure();
 		Configurator.setRootLevel(Level.ERROR);
-		
+
 		LOG.outputConsole("PROGRAM STARTED!!");
 		LOG.outputConsole("-----------------");
 		LOG.outputConsole("");
@@ -94,25 +97,38 @@ public class App
 			if(debug.equals("all")) { 
 				Configurator.setRootLevel(Level.DEBUG);
 			}
-			Controller cntrl = new Controller(function, maxLev, inputData, outputDir, format);
+			Controller cntrl = new Controller(function, maxLev, fixedLev, inputData, outputDir, format);
 			cntrl.runProgram();
 		} else { 
 			// do not run program and show some help message if user enter: --help	
-			System.out.println("The following parameters can be provided as input for the linkage tool: \n" 
-					+ "--function (required): One of the 6 following functionalities: [showDatasetStats, convertToHDT, linkNewbornToPartner, linkPartnerToPartner, linkSiblings, linkMarriageParentsToMarriageParents]\n" 
-					+ "--inputData (required for all functions): Path to the HDT dataset\n" 
-					+ "--outputDir (required for all functions, except for \"showDatasetStats\"): Path to the directory for saving the indices and the links\n" 
-					+ "--maxLev (required for all functions, except \"showDatasetStats\" and \"convertToHDT\"): Integer between 0 and 5, specifying the maximum Levenshtein distance allowed\n" 
-					+ "--format (optional for all functions, except \"showDatasetStats\" and \"convertToHDT\"): One of the two Strings: RDF (default) or CSV, specifying the desired format to save the links between certificates\n"  
-					+ "--debug (optional for all functions): One of the two Strings: error (default, showing only errors in console that occurred in the matching), all (showing every warning in console"
-					+ "\n \n"
-					+ "The current version has six functionalities, specified by the user using --function [functionalityName]: \n"
-					+ "--function convertToHDT: convert an RDF file to an HDT file\n" 
-					+ "--function showDatasetStats: show in console some general stats about the input HDT dataset\n" 
-					+ "--function linkNewbornToPartner: link newborns in Birth Certificates to brides/grooms in Marriage Certificates\n" 
-					+ "--function linkPartnerToPartner: link parents of brides/grooms in Marriage Certificates to brides and grooms in Marriage Certificates\n" 
-					+ "--function linkSiblings: link parents of newborns in Birth Certificates to parents of newborns in Birth Certificates (for detecting siblings)\n" 
-					+ "--function linkMarriageParentsToMarriageParents: link parents of brides/grooms in Marriage Certificates to parents of brides/grooms in Marriage Certificates (for detecting siblings)");
+			String input =  "%-18s %15s %n";
+			
+			System.out.println("Parameters that can be provided as input to the linking tool:");
+			System.out.printf(input, "--function:", "(required) One of the functionalities listed below");
+			System.out.printf(input, "--inputData:", "(required) Path to the HDT dataset");
+			System.out.printf(input, "--outputDir:", "(required) Path to the directory for saving the indices and the links");
+			System.out.printf(input, "--maxLev:", "(optional, default = 4) Integer between 0 and 4, indicating the maximum Levenshtein distance per first or last name allowed to accept a link");
+			System.out.printf(input, "--fixedLev:", "(optional, default = False) Add this flag without a value (i.e. True) if you want to apply the same maximum Levenshtein distance on all string lengths");
+			System.out.printf(input, "--format:", "(optional, default = CSV) One of the two Strings: RDF or CSV, indicating the desired format to save the links between certificates");
+			System.out.printf(input, "--debug:", "(optional, default = error) One of the two Strings: error (only display error messages in console), all (show all warning in console)");
+			System.out.println("\n");
+			
+			System.out.println("Functionalities that are supported in the current version: (case insensitive)");
+			System.out.printf(input, "ConvertToHDT:", "Convert an RDF dataset to an HDT file");
+			System.out.printf(input, "ShowDatasetStats:", "Show in console some general stats about the input HDT dataset");
+			System.out.printf(input, "Within_B_M:", "link newborns in Birth Certificates to brides/grooms in Marriage Certificates (reconstructs life course)");
+			System.out.printf(input, "Between_B_M:", "link parents of newborns in Birth Certificates to brides and grooms in Marriage Certificates (reconstructs family ties)");
+			System.out.println("\n");
+			
+			System.out.println("Example of a running configuration:");
+			System.out.println("--function Between_b_M --inputData myData.hdt --outputDir . --format CSV  --maxLev 3 --fixedLev");
+			System.out.println("\nThese arguments respectively indicate that the user wants to:\n "
+					+ "\t\t link parents of newborns in Birth Certificates to brides and grooms in Marriage Certificates,\n "
+					+ "\t\t described in the dataset myData.hdt (according to CLARIAH's civil registries RDF schema),\n "
+					+ "\t\t and save the detected links in the current directory,\n "
+					+ "\t\t as a CSV file,\n "
+					+ "\t\t allowing a maximum Levenshtein of 3 per name (first name or last name),\n "
+					+ "\t\t independently from the length of the name.");
 		}
 
 		LOG.outputConsole("");

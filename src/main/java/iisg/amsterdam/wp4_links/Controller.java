@@ -18,7 +18,7 @@ public class Controller {
 
 	private String function,inputDataset,outputDirectory;
 	private int maxLev;
-	private boolean outputFormatRDF = true; 
+	private boolean fixedLev = false, outputFormatCSV = true; 
 
 
 
@@ -27,13 +27,14 @@ public class Controller {
 	FileUtilities FILE_UTILS = new FileUtilities();
 
 
-	public Controller(String function, int maxlev, String inputDataset, String outputDirectory, String outputFormat) {
+	public Controller(String function, int maxlev, Boolean fixedLev, String inputDataset, String outputDirectory, String outputFormat) {
 		this.function = function;
 		this.maxLev = maxlev;
+		this.fixedLev = fixedLev;
 		this.inputDataset = inputDataset;
 		this.outputDirectory = outputDirectory;
-		if(!outputFormat.equals("RDF")) {
-			outputFormatRDF = false;
+		if(!outputFormat.equals("CSV")) {
+			outputFormatCSV = false;
 		}
 	}
 
@@ -76,22 +77,6 @@ public class Controller {
 					LOG.outputTotalRuntime("Between Marriages-Marriages (i.e. newly-weds' parents --> newly-weds)", startTime, true);
 				}
 				break;
-//			case "linksiblings":
-//				if(checkAllUserInputs() == true) {
-//					long startTime = System.currentTimeMillis();
-//					LOG.outputConsole("START: Link Siblings");
-//					linkSiblings();
-//					LOG.outputTotalRuntime("Link Siblings", startTime, true);
-//				}
-//				break;
-//			case "linkmarriageparentstomarriageparents":
-//				if(checkAllUserInputs() == true) {
-//					long startTime = System.currentTimeMillis();
-//					LOG.outputConsole("START: Link Marriage Parents To Marriage Parents");
-//					linkMarriageParentsToMarriageParents();
-//					LOG.outputTotalRuntime("Link Marriage Parents To Marriage Parents", startTime, true);
-//				}
-//				break;
 			default:
 				LOG.logError("runProgram", "User input is correct, but no corresponding function exists (error in code)");
 				break;
@@ -133,22 +118,16 @@ public class Controller {
 
 
 	public Boolean checkInputMaxLevenshtein() {
-		if(maxLev == 99) {
-			LOG.logError("checkInputMaxLevenshtein", 
-					"Missing user input for parameter: --maxlev",
-					"Specify a 'maximum Levenshtein distance' from 0 to 5");
+		if(maxLev >= 0 && maxLev <= 4) {
+			LOG.logDebug("checkInputMaxLevenshtein", 
+					"User have chosen max Levenshtein distance: " + maxLev);
+			return true;
 		} else {
-			if(maxLev > 5) {
-				LOG.logError("checkInputMaxLevenshtein", 
-						"Invalid user input for parameter: --maxlev",
-						"Specify a 'maximum Levenshtein distance' from 0 to 5");
-			} else {
-				LOG.logDebug("checkInputMaxLevenshtein", 
-						"User have chosen max levenshtein equals to: " + maxLev);
-				return true;
-			}
+			LOG.logError("checkInputMaxLevenshtein", 
+					"Invalid user input for parameter: --maxlev",
+					"Specify a 'maximum Levenshtein distance' between 0 and 4");
+			return false;
 		}
-		return false;
 	}
 
 
@@ -175,11 +154,11 @@ public class Controller {
 
 
 	public Boolean checkOutputFormatRDF() {
-		if(outputFormatRDF == true) {
-			LOG.logDebug("checkOutputFormatRDF", "Output format is set as RDF");
+		if(outputFormatCSV == true) {
+			LOG.logDebug("checkOutputFormatCSV", "Output format is set as CSV");
 			return true;
 		} else {
-			LOG.logDebug("checkOutputFormatRDF", "Output format is set as CSV");
+			LOG.logDebug("checkOutputFormatCSV", "Output format is set as RDF");
 			return false;
 		}
 	}
@@ -214,7 +193,11 @@ public class Controller {
 
 
 	public void Within_B_M() {
-		String dirName = function + "-maxLev-" + maxLev;
+		String fixed = "";
+		if(fixedLev == true) {
+			fixed = "-fixed";
+		}
+		String dirName = function + "-maxLev-" + maxLev + fixed;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
 			String mainDirectory = outputDirectory + "/" + dirName;
@@ -223,7 +206,7 @@ public class Controller {
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
-				new Within_B_M(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				new Within_B_M(myHDT, mainDirectory, maxLev, fixedLev, outputFormatCSV);
 				myHDT.closeDataset();
 			} else {
 				LOG.logError("Within_B_M", "Error in creating the three sub output directories");
@@ -232,10 +215,14 @@ public class Controller {
 			LOG.logError("Within_B_M", "Error in creating the main output directory");
 		}
 	}
-	
-	
+
+
 	public void Between_B_M() {
-		String dirName = function + "-maxLev-" + maxLev;
+		String fixed = "";
+		if(fixedLev == true) {
+			fixed = "-fixed";
+		}
+		String dirName = function + "-maxLev-" + maxLev + fixed;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
 			String mainDirectory = outputDirectory + "/" + dirName;
@@ -244,7 +231,7 @@ public class Controller {
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
-				new Between_B_M(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				new Between_B_M(myHDT, mainDirectory, maxLev, fixedLev, outputFormatCSV);
 				myHDT.closeDataset();
 			} else {
 				LOG.logError("Between_B_M", "Error in creating the three sub output directories");
@@ -256,7 +243,11 @@ public class Controller {
 
 
 	public void Between_M_M() {
-		String dirName = function + "-maxLev-" + maxLev;
+		String fixed = "";
+		if(fixedLev == true) {
+			fixed = "-fixed";
+		}
+		String dirName = function + "-maxLev-" + maxLev + fixed;
 		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
 		if(processDirCreated == true) {
 			String mainDirectory = outputDirectory + "/" + dirName;
@@ -265,7 +256,7 @@ public class Controller {
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
-				new Between_M_M(myHDT, mainDirectory, maxLev, outputFormatRDF);
+				new Between_M_M(myHDT, mainDirectory,  maxLev, fixedLev, outputFormatCSV);
 				myHDT.closeDataset();
 			} else {
 				LOG.logError("Between_M_M", "Error in creating the three sub output directories");
@@ -274,53 +265,8 @@ public class Controller {
 			LOG.logError("Between_M_M", "Error in creating the main output directory");
 		}
 	}
-	
-	
-	
-	
 
-//	public void linkSiblings() {
-//		String dirName = function + "-maxLev" + maxLev;
-//		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
-//		if(processDirCreated == true) {
-//			String mainDirectory = outputDirectory + "/" + dirName;
-//			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
-//			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
-//			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
-//			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
-//				MyHDT myHDT = new MyHDT(inputDataset);	
-//				//new ProcessSiblings(myHDT, mainDirectory, maxLev, outputFormatRDF);
-//				myHDT.closeDataset();
-//			} else {
-//				LOG.logError("linkSiblings", "Error in creating the three sub output directories");
-//			}
-//		} else {
-//			LOG.logError("linkSiblings", "Error in creating the main output directory");
-//		}
-//	}
-//	
-//	public void linkMarriageParentsToMarriageParents() {
-//		String dirName = function + "-maxLev" + maxLev;
-//		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
-//		if(processDirCreated == true) {
-//			String mainDirectory = outputDirectory + "/" + dirName;
-//			Boolean dictionaryDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DICTIONARY);
-//			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
-//			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
-//			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
-//				MyHDT myHDT = new MyHDT(inputDataset);	
-//				//new ProcessMarriageParentsToMarriageParents(myHDT, mainDirectory, maxLev, outputFormatRDF);
-//				myHDT.closeDataset();
-//			} else {
-//				LOG.logError("linkMarriageParentsToMarriageParents", "Error in creating the three sub output directories");
-//			}
-//		} else {
-//			LOG.logError("linkMarriageParentsToMarriageParents", "Error in creating the main output directory");
-//		}
-//	}
-
-
-
+	
 
 }
 

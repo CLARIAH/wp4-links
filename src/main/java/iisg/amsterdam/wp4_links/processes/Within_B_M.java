@@ -19,25 +19,30 @@ import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 
-// Within_B_M: link newborns in Birth Certificates to brides/grooms in Marriage Certificates (reconstructs life course)
-
 public class Within_B_M {
+
 	private String mainDirectoryPath, processName = "";;
 	private MyHDT myHDT;
 	private final int MIN_YEAR_DIFF = 13, MAX_YEAR_DIFF = 80, indexingUpdateInterval = 2000, linkingUpdateInterval = 10000;
 	private int maxLev;
+	private Boolean fixedLev;
 	Index indexPartner, indexMother, indexFather;
 
 	public static final Logger lg = LogManager.getLogger(Within_B_M.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 	LinksCSV LINKS;
 
-	public Within_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean formatRDF) {
+	public Within_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean formatCSV) {
 		this.mainDirectoryPath = directoryPath;
 		this.maxLev = maxLevenshtein;
+		this.fixedLev = fixedLev;
 		this.myHDT = hdt;
-		String resultsFileName = "within-B-M-maxLev-" + maxLevenshtein;
-		if(formatRDF == false) {
+		String fixed = "";
+		if(fixedLev == true) {
+			fixed = "-fixed";
+		}
+		String resultsFileName = "within-B-M-maxLev-" + maxLevenshtein + fixed;
+		if(formatCSV == true) {
 			String header = "id_certificate_newborn,"
 					+ "id_certificate_partner,"
 					+ "family_line,"
@@ -59,19 +64,17 @@ public class Within_B_M {
 					+ "year_diff";
 			LINKS = new LinksCSV(resultsFileName, mainDirectoryPath, header);
 		}
-		link_within_B_M("f", false);
-		link_within_B_M("m", true);
+		link_within_B_M("f", false); // false = do not close stream
+		link_within_B_M("m", true); // true = close stream
 	}
-
-
 
 
 	public void link_within_B_M(String gender, Boolean closeStream) {
 		Boolean success = generatePartnerIndex(gender);
 		if(success == true) {	
-			indexPartner.createTransducer(maxLev);
-			indexMother.createTransducer(maxLev);
-			indexFather.createTransducer(maxLev);
+			indexPartner.createTransducer();
+			indexMother.createTransducer();
+			indexFather.createTransducer();
 			try {
 				int cntAll =0 ;
 				String rolePartner, rolePartnerMother, rolePartnerFather, familyCode;
@@ -185,15 +188,16 @@ public class Within_B_M {
 					pb.close();
 				}
 			} catch (Exception e) {
-				LOG.logError("link_within_B_M", "Error in linking newborns to partners in process " + processName);
+				LOG.logError("link_between_B_M", "Error in linking parents of newborns to partners in process " + processName);
 				e.printStackTrace();
 			} finally {
 				if(closeStream == true) {
 					LINKS.closeStream();
-				}	
+				}
 			}
 		}
 	}
+
 
 	public Boolean generatePartnerIndex(String gender) {
 		long startTime = System.currentTimeMillis();
@@ -205,17 +209,17 @@ public class Within_B_M {
 			rolePartnerMother = ROLE_BRIDE_MOTHER;
 			rolePartnerFather = ROLE_BRIDE_FATHER;
 			processName = "Brides";
-			indexPartner = new Index("bride", mainDirectoryPath);
-			indexMother = new Index("bride-mother", mainDirectoryPath);
-			indexFather = new Index("bride-father", mainDirectoryPath);
+			indexPartner = new Index("bride", mainDirectoryPath, maxLev, fixedLev);
+			indexMother = new Index("bride-mother", mainDirectoryPath, maxLev, fixedLev);
+			indexFather = new Index("bride-father", mainDirectoryPath, maxLev, fixedLev);
 		} else {
 			rolePartner = ROLE_GROOM;
 			rolePartnerMother = ROLE_GROOM_MOTHER;
 			rolePartnerFather = ROLE_GROOM_FATHER;
 			processName = "Grooms";
-			indexPartner = new Index("groom", mainDirectoryPath);
-			indexMother = new Index("groom-mother", mainDirectoryPath);
-			indexFather = new Index("groom-father", mainDirectoryPath);
+			indexPartner = new Index("groom", mainDirectoryPath, maxLev, fixedLev);
+			indexMother = new Index("groom-mother", mainDirectoryPath, maxLev, fixedLev);
+			indexFather = new Index("groom-father", mainDirectoryPath, maxLev, fixedLev);
 		}
 		LOG.outputConsole("START: Generating Dictionary for " + processName);
 		try {
@@ -277,6 +281,7 @@ public class Within_B_M {
 			LOG.logError("", e.toString());
 			return false;
 		} finally {
+			indexPartner.closeStream();
 			indexMother.closeStream();
 			indexFather.closeStream();
 			LOG.outputTotalRuntime("Generating Dictionary for " + processName, startTime, true);
@@ -293,7 +298,14 @@ public class Within_B_M {
 		return true;
 	}
 
-
+	/**
+	 * Given the year of a birth event, check whether this marriage event fits the timeline of a possible match
+	 * 
+	 * @param birthYear
+	 *            year of birth 
+	 * @param candidateMarriageEvent
+	 *            marriage event URI            
+	 */
 	public int checkTimeConsistency_Within_B_M(int birthYear, String candidateMarriageEvent) {
 		int marriageYear = myHDT.getEventDate(candidateMarriageEvent);
 		int diff = marriageYear - birthYear;
@@ -306,5 +318,5 @@ public class Within_B_M {
 
 
 
-
 }
+

@@ -1,48 +1,52 @@
 package iisg.amsterdam.wp4_links.processes;
 
-
-import static iisg.amsterdam.wp4_links.Properties.*;
+import static iisg.amsterdam.wp4_links.Properties.ROLE_BRIDE;
+import static iisg.amsterdam.wp4_links.Properties.ROLE_FATHER;
+import static iisg.amsterdam.wp4_links.Properties.ROLE_GROOM;
+import static iisg.amsterdam.wp4_links.Properties.ROLE_MOTHER;
+import static iisg.amsterdam.wp4_links.Properties.ROLE_NEWBORN;
 
 import java.util.Set;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.rdfhdt.hdt.exceptions.NotFoundException;
 import org.rdfhdt.hdt.triples.IteratorTripleString;
 import org.rdfhdt.hdt.triples.TripleString;
 
-
-
 import iisg.amsterdam.wp4_links.CandidateList;
 import iisg.amsterdam.wp4_links.Index;
 import iisg.amsterdam.wp4_links.LinksCSV;
 import iisg.amsterdam.wp4_links.MyHDT;
 import iisg.amsterdam.wp4_links.Person;
-
 import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 
-// Between_B_M: link parents of newborns in Birth Certificates to brides and grooms in Marriage Certificates (reconstructs family ties)
-
 public class Between_B_M {
 
-	// output directory specified by the user + name of the called function
 	private String mainDirectoryPath, processName = "";;
 	private MyHDT myHDT;
 	private final int MIN_YEAR_DIFF = -10, MAX_YEAR_DIFF = 36, indexingUpdateInterval = 2000, linkingUpdateInterval = 10000;
 	private int maxLev;
+	private Boolean fixedLev;
 	Index indexBride, indexGroom;
 
-	public static final Logger lg = LogManager.getLogger(Between_M_M.class);
+	public static final Logger lg = LogManager.getLogger(Between_B_M.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 	LinksCSV LINKS;
 
-	public Between_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean formatRDF) {
+	public Between_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean formatCSV) {
 		this.mainDirectoryPath = directoryPath;
 		this.maxLev = maxLevenshtein;
+		this.fixedLev = fixedLev;
 		this.myHDT = hdt;
-		String resultsFileName = "between-B-M-maxLev-" + maxLevenshtein;
-		if(formatRDF == false) {
+		String fixed = "";
+		if(fixedLev == true) {
+			fixed = "-fixed";
+		}
+		String resultsFileName = "between-B-M-maxLev-" + maxLevenshtein + fixed;
+		if(formatCSV == true) {
 			String header = "id_certificate_newbornParents,"
 					+ "id_certificate_partners,"
 					+ "levenshtein_total_bride,"
@@ -60,12 +64,13 @@ public class Between_B_M {
 		}
 		link_between_B_M();
 	}
-
+	
+	
 	public void link_between_B_M() {
 		Boolean success = generateCouplesIndex();
 		if(success == true) {	
-			indexBride.createTransducer(maxLev);
-			indexGroom.createTransducer(maxLev);
+			indexBride.createTransducer();
+			indexGroom.createTransducer();
 			try {
 				int cntAll =0 ;
 				// iterate through the marriage certificates to link it to the marriage dictionaries
@@ -81,7 +86,7 @@ public class Between_B_M {
 						cntAll++;
 						String birthEvent = ts.getSubject().toString();	
 						String birthEventID = myHDT.getIDofEvent(birthEvent);
-						int birthEventYear = myHDT.getEventDate(birthEvent);
+						int birthYear = myHDT.getEventDate(birthEvent);
 						Person mother = myHDT.getPersonInfo(birthEvent, ROLE_MOTHER);
 						Person father = myHDT.getPersonInfo(birthEvent, ROLE_FATHER);				
 						if(mother.isValidWithFullName() && father.isValidWithFullName()) {
@@ -93,10 +98,10 @@ public class Between_B_M {
 									Set<String> finalCandidatesList = candidatesBride.findIntersectionCandidates(candidatesGroom);
 									for(String finalCandidate: finalCandidatesList) {
 										String marriageEventAsCoupleURI = myHDT.getEventURIfromID(finalCandidate, "direct");
-										int yearDifference = checkTimeConsistency_between_b_m(birthEventYear, marriageEventAsCoupleURI);
+										int yearDifference = checkTimeConsistency_between_b_m(birthYear, marriageEventAsCoupleURI);
 										if(yearDifference < 999) { // if it fits the time line
 											Person bride = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_BRIDE);
-											Person groom = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_GROOM);	
+											Person groom = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_GROOM);
 											LINKS.saveLinks_Between_B_M(candidatesBride, candidatesGroom, finalCandidate, bride, groom, yearDifference);																				
 										}
 									}
@@ -125,8 +130,8 @@ public class Between_B_M {
 		int cntInserts=0, cntAll =0 ;
 		IteratorTripleString it;
 		processName = "Couples";
-		indexBride = new Index("bride", mainDirectoryPath);
-		indexGroom = new Index("groom", mainDirectoryPath);
+		indexBride = new Index("bride", mainDirectoryPath, maxLev, fixedLev);
+		indexGroom = new Index("groom", mainDirectoryPath, maxLev, fixedLev);
 		LOG.outputConsole("START: Generating Dictionary for " + processName);
 		try {
 			indexBride.openIndex();
@@ -193,5 +198,6 @@ public class Between_B_M {
 		}
 	}
 
-
+	
+	
 }
