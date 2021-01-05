@@ -1,25 +1,25 @@
 package iisg.amsterdam.wp4_links;
 
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import iisg.amsterdam.wp4_links.processes.*;
-import iisg.amsterdam.wp4_links.utilities.FileUtilities;
-import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
+import iisg.amsterdam.wp4_links.utilities.*;
 
 import static iisg.amsterdam.wp4_links.Properties.*;
 
 public class Controller {
 
-	final String[] FUNCTIONS = {"showDatasetStats", "convertToHDT", "within_b_m", 
-			"between_b_m", "between_m_m"};
-
-	private String function,inputDataset,outputDirectory;
+	@SuppressWarnings("unused")
+	final private String[] FUNCTIONS_not_implemented = {"within_b_d", "within_m_d", "within_b_b", "within_m_m", "within_d_d", "between_d_m"};
+	final private String[] FUNCTIONS = {"showDatasetStats", "convertToHDT", "closure", "within_b_m", "between_b_m", "between_m_m"};
+	private String function, inputDataset, outputDirectory;
 	private int maxLev;
-	private boolean fixedLev = false, outputFormatCSV = true; 
-
+	private boolean fixedLev = false, bestLink = false, outputFormatCSV = true; 
 
 
 	public static final Logger lg = LogManager.getLogger(Controller.class);
@@ -27,7 +27,7 @@ public class Controller {
 	FileUtilities FILE_UTILS = new FileUtilities();
 
 
-	public Controller(String function, int maxlev, Boolean fixedLev, String inputDataset, String outputDirectory, String outputFormat) {
+	public Controller(String function, int maxlev, Boolean fixedLev, Boolean bestLink, String inputDataset, String outputDirectory, String outputFormat) {
 		this.function = function;
 		this.maxLev = maxlev;
 		this.fixedLev = fixedLev;
@@ -43,18 +43,17 @@ public class Controller {
 		if(checkInputFunction() == true) {
 			switch (function) {
 			case "showdatasetstats":
-				if(checkInputDataset() == true) {
+				if(checkInputDataset()) {
 					outputDatasetStatistics();
 				}
 				break;
 			case "converttohdt":
-				if(checkInputDataset() == true) {
-					if(checkInputDirectoryOutput() == true)
-						convertToHDT();
+				if(checkInputDataset() && checkInputDirectory()) {
+					convertToHDT();
 				}
 				break;
 			case "within_b_m":
-				if(checkAllUserInputs() == true) {
+				if(checkAllUserInputs()) {
 					long startTime = System.currentTimeMillis();
 					LOG.outputConsole("START: Within Births-Marriages (i.e. newborn --> partner)");
 					Within_B_M();
@@ -62,7 +61,7 @@ public class Controller {
 				}
 				break;
 			case "between_b_m":
-				if(checkAllUserInputs() == true) {
+				if(checkAllUserInputs()) {
 					long startTime = System.currentTimeMillis();
 					LOG.outputConsole("START: Between Births-Marriages (i.e. newborn parents --> partners)");
 					Between_B_M();
@@ -70,11 +69,19 @@ public class Controller {
 				}
 				break;
 			case "between_m_m":
-				if(checkAllUserInputs() == true) {
+				if(checkAllUserInputs()) {
 					long startTime = System.currentTimeMillis();
 					LOG.outputConsole("START: Between Marriages-Marriages (i.e. newly-weds' parents --> newly-weds)");
 					Between_M_M();
 					LOG.outputTotalRuntime("Between Marriages-Marriages (i.e. newly-weds' parents --> newly-weds)", startTime, true);
+				}
+				break;
+			case "closure":
+				if(checkInputDataset() && checkInputDirectoryContents()) {
+					long startTime = System.currentTimeMillis();
+					LOG.outputConsole("START: Computing the transitive closure");
+					computeClosure();
+					LOG.outputTotalRuntime("Computing the transitive closure", startTime, true);
 				}
 				break;
 			default:
@@ -87,9 +94,9 @@ public class Controller {
 
 	public Boolean checkAllUserInputs() {
 		Boolean validInputs = true;
-		validInputs = validInputs & checkInputMaxLevenshtein();
 		validInputs = validInputs & checkInputDataset();
-		validInputs = validInputs & checkInputDirectoryOutput();
+		validInputs = validInputs & checkInputDirectory();
+		validInputs = validInputs & checkInputMaxLevenshtein();
 		checkOutputFormatRDF();
 		return validInputs;
 	}
@@ -142,7 +149,7 @@ public class Controller {
 	}
 
 
-	public Boolean checkInputDirectoryOutput() {
+	public Boolean checkInputDirectory() {
 		if(FILE_UTILS.checkIfDirectoryExists(outputDirectory)) {
 			LOG.logDebug("checkInputDirectoryOutput", "The following directory is set to store results: " + outputDirectory);
 			return true;
@@ -150,6 +157,16 @@ public class Controller {
 			LOG.logError("checkInputDirectoryOutput", "Invalid or Missing user input for parameter: --outputDir", "A valid directory for storing links is required as input after parameter: --outputDir");
 			return false;
 		}
+	}
+
+
+	public Boolean checkInputDirectoryContents() {
+		if(checkInputDirectory()) {
+			if(FILE_UTILS.getAllValidLinksFile(outputDirectory, false) != null) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 
@@ -165,24 +182,16 @@ public class Controller {
 
 
 	public void outputDatasetStatistics() {
+		DecimalFormat formatter = new DecimalFormat("#,###");
 		MyHDT myHDT = new MyHDT(inputDataset);
-		// birth certificates
-		// LOG.outputConsole("--- 	# Birth Registrations: " + numberOfBirthRegistrations + " ---");
 		int numberOfBirthEvents = myHDT.getNumberOfSubjects(TYPE_BIRTH_EVENT);
-		LOG.outputConsole("--- 	# Birth Events: " + numberOfBirthEvents + " ---");
-		// marriage certificates
-		// LOG.outputConsole("--- 	# Marriage Registrations: " + numberOfMarriageRegistrations + " ---");
+		LOG.outputConsole("--- 	# Birth Events: " + formatter.format(numberOfBirthEvents) + " ---");
 		int numberOfMarriageEvents = myHDT.getNumberOfSubjects(TYPE_MARRIAGE_EVENT);
-		LOG.outputConsole("--- 	# Marriage Events: " + numberOfMarriageEvents + " ---");
-		// LOG.outputConsole("--- 		DIFF: Registrations - Events= " + diffMarriage);
-		// death certificates
-		// LOG.outputConsole("--- 	# Death Registrations: " + numberOfDeathRegistrations + " ---");
+		LOG.outputConsole("--- 	# Marriage Events: " + formatter.format(numberOfMarriageEvents) + " ---");
 		int numberOfDeathEvents = myHDT.getNumberOfSubjects(TYPE_DEATH_EVENT);
-		LOG.outputConsole("--- 	# Death Events: " + numberOfDeathEvents + " ---");
-		// LOG.outputConsole("--- 		DIFF: Registrations - Events= " + diffDeath);
-		// individuals
+		LOG.outputConsole("--- 	# Death Events: " + formatter.format(numberOfDeathEvents) + " ---");
 		int numberOfIndividuals = myHDT.getNumberOfSubjects(TYPE_PERSON);
-		LOG.outputConsole("--- 	# Individuals: " + numberOfIndividuals + " ---");
+		LOG.outputConsole("--- 	# Individuals: " + formatter.format(numberOfIndividuals) + " ---");
 		myHDT.closeDataset();
 	}
 
@@ -206,7 +215,7 @@ public class Controller {
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
-				new Within_B_M(myHDT, mainDirectory, maxLev, fixedLev, outputFormatCSV);
+				new Within_B_M(myHDT, mainDirectory, maxLev, fixedLev, bestLink, outputFormatCSV);
 				myHDT.closeDataset();
 			} else {
 				LOG.logError("Within_B_M", "Error in creating the three sub output directories");
@@ -231,7 +240,7 @@ public class Controller {
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
-				new Between_B_M(myHDT, mainDirectory, maxLev, fixedLev, outputFormatCSV);
+				new Between_B_M(myHDT, mainDirectory, maxLev, fixedLev, bestLink, outputFormatCSV);
 				myHDT.closeDataset();
 			} else {
 				LOG.logError("Between_B_M", "Error in creating the three sub output directories");
@@ -256,7 +265,7 @@ public class Controller {
 			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
 			if(dictionaryDirCreated &&  databaseDirCreated && resultsDirCreated) {
 				MyHDT myHDT = new MyHDT(inputDataset);	
-				new Between_M_M(myHDT, mainDirectory,  maxLev, fixedLev, outputFormatCSV);
+				new Between_M_M(myHDT, mainDirectory,  maxLev, fixedLev, bestLink, outputFormatCSV);
 				myHDT.closeDataset();
 			} else {
 				LOG.logError("Between_M_M", "Error in creating the three sub output directories");
@@ -266,7 +275,25 @@ public class Controller {
 		}
 	}
 
-	
+
+	public void computeClosure() {
+		String dirName = function;
+		Boolean processDirCreated =  FILE_UTILS.createDirectory(outputDirectory, dirName);
+		if(processDirCreated == true) {
+			String mainDirectory = outputDirectory + "/" + dirName;
+			Boolean databaseDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_DATABASE);
+			Boolean resultsDirCreated = FILE_UTILS.createDirectory(mainDirectory, DIRECTORY_NAME_RESULTS);
+			if(databaseDirCreated && resultsDirCreated) {
+				MyHDT myHDT = new MyHDT(inputDataset);	
+				new Closure(myHDT, outputDirectory, outputFormatCSV);
+				myHDT.closeDataset();
+			} else {
+				LOG.logError("Closure", "Error in creating the main output directory");
+			}
+		}
+	}
+
+
 
 }
 

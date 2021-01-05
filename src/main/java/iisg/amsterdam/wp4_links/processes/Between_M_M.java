@@ -27,27 +27,31 @@ import me.tongfei.progressbar.ProgressBarStyle;
 public class Between_M_M {
 
 	// output directory specified by the user + name of the called function
-	private String mainDirectoryPath, processName = "";;
+	private String mainDirectoryPath, processName = "";
 	private MyHDT myHDT;
 	private final int MIN_YEAR_DIFF = 14, MAX_YEAR_DIFF = 100, indexingUpdateInterval = 2000, linkingUpdateInterval = 10000;
 	private int maxLev;
-	private Boolean fixedLev;
+	private Boolean fixedLev, bestLink;
 	Index indexBride, indexGroom;
 
 	public static final Logger lg = LogManager.getLogger(Between_M_M.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 	LinksCSV LINKS;
 
-	public Between_M_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean formatCSV) {
+	public Between_M_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean bestLink, Boolean formatCSV) {
 		this.mainDirectoryPath = directoryPath;
 		this.maxLev = maxLevenshtein;
 		this.fixedLev = fixedLev;
+		this.bestLink = bestLink;
 		this.myHDT = hdt;
-		String fixed = "";
+		String fixed = "", best = "";
 		if(fixedLev == true) {
 			fixed = "-fixed";
 		}
-		String resultsFileName = "between-M-M-maxLev-" + maxLevenshtein + fixed;
+		if(bestLink == true) {
+			best = "-best";
+		}
+		String resultsFileName = "between-M-M-maxLev-" + maxLevenshtein + fixed + best;
 		if(formatCSV == true) {
 			String header = "id_certificate_parents,"
 					+ "id_certificate_partners,"
@@ -112,7 +116,7 @@ public class Between_M_M {
 									if(candidatesBride.candidates.isEmpty() == false) {
 										Set<String> finalCandidatesList = candidatesBride.findIntersectionCandidates(candidatesGroom);
 										for(String finalCandidate: finalCandidatesList) {
-											String marriageEventAsCoupleURI = myHDT.getEventURIfromID(finalCandidate);
+											String marriageEventAsCoupleURI = myHDT.getEventURIfromID(finalCandidate, "direct");
 											int yearDifference = checkTimeConsistencyMarriageToMarriage(marriageEventYear, marriageEventAsCoupleURI);
 											if(yearDifference < 999) { // if it fits the time line
 												Person bride = myHDT.getPersonInfo(marriageEventAsCoupleURI, ROLE_BRIDE);

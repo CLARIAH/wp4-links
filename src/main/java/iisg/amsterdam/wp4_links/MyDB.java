@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -94,10 +95,9 @@ public class MyDB {
 
 	public void addSingleValueToDB(String key, String value)  {
 		byte[] ser_key = serialize(key);
-		
 		try {
 			final byte[] result = myDB.get(ser_key);
-			if (result != null) {  // result == null if key does not exist in db.
+			if (result != null) {  // if key does not exist in db.
 				LOG.logWarn("addSingleValueToDB", "Key: " + key + " already exists in DB (but it will be added anyway)");
 			} 
 			byte[] ser_value = serialize(value);
@@ -108,13 +108,35 @@ public class MyDB {
 		}
 	}
 	
+	public void addSingleValueToDB(String key, String value, Boolean forceAdd)  {
+		try {
+			byte[] ser_key = serialize(key);
+			byte[] ser_value = serialize(value);
+			myDB.put(ser_key, ser_value);
+		} catch (RocksDBException e) {
+			LOG.logError("addSingleValueToDB", "Error adding key: " + key + " with value: " + value + " to DB" );
+			LOG.logError("addSingleValueToDB", e.getLocalizedMessage());
+		}
+	}
+	
+	public void removeEntryFromDB(String key)  {
+		byte[] ser_key = serialize(key);
+		try {
+			myDB.delete(ser_key);
+		} catch (RocksDBException e) {
+			LOG.logError("removeEntryFromDB", "Error removing key: " + key + " from DB" );
+			LOG.logError("removeEntryFromDB", e.getLocalizedMessage());
+		}
+	}
+	
+	
 	@SuppressWarnings("unchecked")
 	public void addListValueToDB(String key, String value) {
 		byte[] ser_key = serialize(key);
 		ArrayList<String> myList;
 		try {
 			final byte[] result = myDB.get(ser_key);
-			if (result == null) {  // result == null if key does not exist in db.
+			if (result == null) {  // if key does not exist in db.
 				myList = new ArrayList<String>();
 			} else {
 				myList = (ArrayList<String>) deserialize(result);
@@ -125,6 +147,37 @@ public class MyDB {
 		} catch (RocksDBException e) {
 			LOG.logError("addListValueToDB", "Error adding key: " + key + " with value: " + value + " to DB" );
 			LOG.logError("addListValueToDB", e.getLocalizedMessage());
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void addSetValueToDB(String key, String value) {
+		byte[] ser_key = serialize(key);
+		HashSet<String> myList;
+		try {
+			final byte[] result = myDB.get(ser_key);
+			if (result == null) {  // if key does not exist in db.
+				myList = new HashSet<String>();
+			} else {
+				myList = (HashSet<String>) deserialize(result);
+			}
+			myList.add(value);
+			byte[] ser_value = serialize(myList);
+			myDB.put(ser_key, ser_value);
+		} catch (RocksDBException e) {
+			LOG.logError("addSetValueToDB", "Error adding key: " + key + " with value: " + value + " to DB" );
+			LOG.logError("addSetValueToDB", e.getLocalizedMessage());
+		}
+	}
+	
+	public void addSetValueToDB(String key, HashSet<String> setValue) {
+		byte[] ser_key = serialize(key);
+		try {
+			byte[] ser_value = serialize(setValue);
+			myDB.put(ser_key, ser_value);
+		} catch (RocksDBException e) {
+			LOG.logError("addSetValueToDB", "Error adding key: " + key + " with set value: " + setValue + " to DB" );
+			LOG.logError("addSetValueToDB", e.getLocalizedMessage());
 		}
 	}
 
@@ -157,6 +210,23 @@ public class MyDB {
 		} catch (RocksDBException e) {
 			LOG.logError("getListFromDB", "Error getting value of key: " + key + " from DB" );
 			LOG.logError("getListFromDB", e.getLocalizedMessage());
+		}
+		return null;
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	public HashSet<String> getSetFromDB(String key)  {
+		byte[] ser_key = serialize(key);
+		try {
+			final byte[] result = myDB.get(ser_key);
+			if (result != null) {  // result == null if key does not exist in db.
+				HashSet<String> myList = (HashSet<String>) deserialize(result);
+				return myList;
+			}
+		} catch (RocksDBException e) {
+			LOG.logError("getSetFromDB", "Error getting value of key: " + key + " from DB" );
+			LOG.logError("getSetFromDB", e.getLocalizedMessage());
 		}
 		return null;
 	}

@@ -29,23 +29,27 @@ public class Between_B_M {
 	private MyHDT myHDT;
 	private final int MIN_YEAR_DIFF = -10, MAX_YEAR_DIFF = 36, indexingUpdateInterval = 2000, linkingUpdateInterval = 10000;
 	private int maxLev;
-	private Boolean fixedLev;
+	private Boolean fixedLev, bestLink;
 	Index indexBride, indexGroom;
 
 	public static final Logger lg = LogManager.getLogger(Between_B_M.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 	LinksCSV LINKS;
 
-	public Between_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean formatCSV) {
+	public Between_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean bestLink, Boolean formatCSV) {
 		this.mainDirectoryPath = directoryPath;
 		this.maxLev = maxLevenshtein;
 		this.fixedLev = fixedLev;
+		this.bestLink = bestLink;
 		this.myHDT = hdt;
-		String fixed = "";
+		String fixed = "", best = "";
 		if(fixedLev == true) {
 			fixed = "-fixed";
 		}
-		String resultsFileName = "between-B-M-maxLev-" + maxLevenshtein + fixed;
+		if(bestLink == true) {
+			best = "-best";
+		}
+		String resultsFileName = "between-B-M-maxLev-" + maxLevenshtein + fixed + best;
 		if(formatCSV == true) {
 			String header = "id_certificate_newbornParents,"
 					+ "id_certificate_partners,"

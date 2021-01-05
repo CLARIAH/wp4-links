@@ -30,7 +30,6 @@ public final class Properties {
 
 	// Prefixes
 	public final static String PREFIX_IISG = NAMESPACE + DATASET_NAME;
-	//public final static String PREFIX_IISG = "https://iisg.amsterdam/event/";
 	public final static String PREFIX_IISG_VOCAB = PREFIX_IISG + "vocab/";
 	public final static String PREFIX_SCHEMA = "http://schema.org/";
 	public final static String PREFIX_BIO = "http://purl.org/vocab/bio/0.1/";
@@ -67,13 +66,14 @@ public final class Properties {
 	public final static String PERSON_ID = PREFIX_IISG_VOCAB + "personID";
 	public final static String GIVEN_NAME = PREFIX_SCHEMA + "givenName";
 	public final static String FAMILY_NAME = PREFIX_SCHEMA + "familyName";
+	
+	// Gender
 	public final static String GENDER = PREFIX_SCHEMA + "gender";
-
-	//	// Data properties Persons old
-	//	public final static String PERSON_ID = "https://iisg.amsterdam/vocab/person_id";
-	//	public final static String GIVEN_NAME = "http://xmlns.com/foaf/0.1/firstName";
-	//	public final static String FAMILY_NAME = "http://xmlns.com/foaf/0.1/lastName";
-	//	public final static String GENDER = "http://xmlns.com/foaf/0.1/gender";
+	public final static String GENDER_FEMALE_URI = PREFIX_SCHEMA + "Female";
+	public final static String GENDER_FEMALE_LITERAL = "\"f\"^^<http://www.w3.org/2001/XMLSchema#string>";
+	public final static String GENDER_MALE_URI = PREFIX_SCHEMA + "Male";
+	public final static String GENDER_MALE_LITERAL = "\"m\"^^<http://www.w3.org/2001/XMLSchema#string>";
+	
 
 	// Roles correct 
 	public final static String ROLE_NEWBORN = PREFIX_IISG_VOCAB + "newborn";

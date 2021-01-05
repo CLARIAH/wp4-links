@@ -1,6 +1,7 @@
 package iisg.amsterdam.wp4_links;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,8 +39,9 @@ public class MyHDT {
 			IteratorTripleString it;
 			try {
 				it = dataset.search("", "", "");
-				LOG.outputTotalRuntime("Loading HDT Dataset", startTime, true);
-				LOG.outputConsole("--- 	Estimated number of triples in dataset: " + it.estimatedNumResults() + " ---");
+				LOG.outputTotalRuntime("Loading HDT Dataset", startTime, true);			
+				DecimalFormat formatter = new DecimalFormat("#,###");
+				LOG.outputConsole("--- 	# Triples in dataset: " + formatter.format(it.estimatedNumResults()) + " ---");
 			} catch (NotFoundException e) {
 				LOG.logError("MyHDT_Constructor", "Error estimating triples in HDT dataset");
 				e.printStackTrace();
@@ -61,7 +63,7 @@ public class MyHDT {
 			LOG.logError("MyHDT Constructor", "Could not guess notation for "+inputRDF+" - Trying NTriples...");
 			notation = RDFNotation.NTRIPLES;
 		}
-		
+
 		HDT hdt;
 		try {
 			hdt = HDTManager.generateHDT(inputRDF, baseURI, notation, new HDTSpecification(), null);
@@ -212,6 +214,14 @@ public class MyHDT {
 
 
 
+	public String getIDofPerson(String personURI) {
+		// Of course the more correct way would be to query the HDT file and get the registration ID from the event URI
+		String[] bits = personURI.split("/");
+		return bits[bits.length-1];
+	}
+
+
+
 	/**
 	 * Returns an Object of the Java Class Person with their personal details (first name, last name, and gender) extracted from the HDT
 	 * 
@@ -295,7 +305,12 @@ public class MyHDT {
 			if(it.hasNext()){
 				TripleString ts = it.next();
 				gender = ts.getObject().toString();
-				gender = getStringValueFromLiteral(gender);
+				if(gender.equals(GENDER_FEMALE_URI) || gender.equals(GENDER_FEMALE_LITERAL)) {
+					return "f";
+				} else {
+					return "m";
+				}
+				//gender = getStringValueFromLiteral(gender);
 			}
 		} catch (NotFoundException e) {
 			e.printStackTrace();
@@ -334,7 +349,12 @@ public class MyHDT {
 			while(it.hasNext()) {
 				TripleString ts = it.next();
 				String[] bits = ts.getObject().toString().split("-");
-				return Integer.parseInt(bits[0].replace("\"", ""));
+				try {
+					int returnedDate = Integer.parseInt(bits[0].replace("\"", ""));
+					return returnedDate;
+				} catch (Exception e) {
+					return 0;
+				}
 			}
 		} catch (NotFoundException e) {
 			//e.printStackTrace();
@@ -372,16 +392,73 @@ public class MyHDT {
 		}
 		return null;
 	}
-	
-	
-	public String getEventURIfromID(String eventID, String prov) {
-		
-		return PREFIX_IISG  + "event/" + eventID;
 
+
+	public String getEventURIfromID(String eventID, String prov) {
 		// Of course the more correct way would be to query the HDT file and get the event URI from the registration ID		
-		//return PREFIX_IISG + typeEvent + "/" + eventID;
-		//return PREFIX_IISG  + "event/" + eventID;
+		return PREFIX_IISG  + "event/" + eventID;
 	}
+
+
+	public String getPersonURIfromID(String personID, String prov) {
+		// Of course the more correct way would be to query the HDT file and get the event URI from the person ID		
+		return PREFIX_IISG  + "person/" + personID;
+	}
+
+
+	public String getPersonID(String eventID, String role) {
+		String eventURI = getEventURIfromID(eventID, "direct");
+		try {
+			IteratorTripleString it = dataset.search(eventURI, role, "");
+			while(it.hasNext()) {
+				TripleString ts = it.next();
+				String personURI = ts.getObject().toString();
+				return getIDofPerson(personURI);
+			}
+		} catch (NotFoundException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+
+	public String getPersonID(String eventID, String role1, String role2, String familyLine) {
+		String role = getPropertyFromFamilyLine(role1, role2, familyLine);
+		String eventURI = getEventURIfromID(eventID, "direct");
+		try {
+			IteratorTripleString it = dataset.search(eventURI, role, "");
+			while(it.hasNext()) {
+				TripleString ts = it.next();
+				String personURI = ts.getObject().toString();
+				return getIDofPerson(personURI);
+			}
+		} catch (NotFoundException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+
+
+	public String getPropertyFromFamilyLine(String role1, String role2, String familyLine) {
+		String role;
+		if (familyLine.equals("21")) { // bride line
+			if(role1.contains("bride") || role1.contains("Bride")) {
+				role = role1 ;
+			} else {
+				role = role2 ;
+			}
+		} else { // groom line
+			if(role1.contains("groom") || role1.contains("Groom")) {
+				role = role1 ;
+			} else {
+				role = role2 ;
+			}
+		}
+		return role;
+	}
+
+
 
 
 	/**

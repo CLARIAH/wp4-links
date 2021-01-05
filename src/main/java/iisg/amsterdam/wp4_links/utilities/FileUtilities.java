@@ -1,10 +1,19 @@
 package iisg.amsterdam.wp4_links.utilities;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -69,6 +78,15 @@ public class FileUtilities {
 		} 
 	}
 
+	public Boolean deleteFile(String filePath) {
+		try {
+			return Files.deleteIfExists(Paths.get(filePath));
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 
 	public BufferedOutputStream createFileStream(String path) throws IOException {
 		try {
@@ -96,7 +114,89 @@ public class FileUtilities {
 			return false;
 		}
 	}
-	
+
+
+	public int countLines(String filePath) {
+		int countLines = 0;
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(filePath));
+			while (reader.readLine() != null) countLines++;
+			reader.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return countLines;
+	}
+
+
+	public ArrayList<String> getAllValidLinksFile(String directory, Boolean output) {
+		ArrayList<String> consideredFiles = new ArrayList<String>();
+		try (Stream<Path> walk = Files.walk(Paths.get(directory))) {
+			List<String> result = walk.map(x -> x.toString()).filter(f -> f.endsWith(".csv")).collect(Collectors.toList());
+			for(String fileName : result) {
+				if(checkIfValidLinksFile(fileName)) {
+					consideredFiles.add(fileName);
+				}
+			}
+			if (!consideredFiles.isEmpty()) {
+				if (output == true)
+					LOG.outputConsole("Computing the transitive closure for the following files:");
+				for (String consideredFile: consideredFiles) {
+					if (output == true)
+						LOG.outputConsole("\t" + consideredFile);
+				}
+				return consideredFiles;
+			} else {
+				LOG.logError("getAllValidLinksFile", "Missing a CSV file in the specified directory containing the detected links with the following format:"
+						+ " (within|between)[-_][bmd][-_][bmd]");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			LOG.logError("getAllValidLinksFile", "Missing a CSV file in the specified directory containing the detected links with the following format:"
+					+ " (within|between)[-_][bmd][-_][bmd]");	
+		}
+		return null;
+	}
+
+
+
+	public Boolean checkIfValidLinksFile(String filePath) {
+		Path fPath = Paths.get(filePath);
+		String fileName = fPath.getFileName().toString();
+		String fileNameLC = fileName.toLowerCase();
+		Pattern p = Pattern.compile("(within|between)[-_][bmd][-_][bmd]");
+		Matcher m = p.matcher(fileNameLC);
+		return m.find();
+	}
+
+	public Boolean checkPattern(String name, String regex) {
+		Path fPath = Paths.get(name);
+		String fileName = fPath.getFileName().toString();
+		String fileNameLC = fileName.toLowerCase();
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher(fileNameLC);
+		return m.find();
+	}
+
+	public Boolean check_Within_B_M(String filePath) {
+		String regex = "(within)[-_](b)[-_](m)";
+		return checkPattern(filePath, regex);
+	}
+
+	public Boolean check_Between_B_M(String filePath) {
+		String regex = "(between)[-_](b)[-_](m)";
+		return checkPattern(filePath, regex);
+	}
+
+	public Boolean check_Between_M_M(String filePath) {
+		String regex = "(between)[-_](m)[-_](m)";
+		return checkPattern(filePath, regex);
+	}
+
+
+
+
 
 
 }

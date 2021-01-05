@@ -18,7 +18,7 @@ public class LinksCSV {
 
 
 	private String linksID;
-	private String directoryLinks;
+	private String fileLinks;
 	private BufferedOutputStream streamLinks;
 	private int counterFlush = 0;
 
@@ -29,16 +29,37 @@ public class LinksCSV {
 
 	public LinksCSV(String ID, String directoryPath, String header) {
 		this.linksID = ID;
-		this.directoryLinks = directoryPath + "/" + DIRECTORY_NAME_RESULTS + "/" + linksID + ".csv";
+		this.fileLinks = directoryPath + "/" + DIRECTORY_NAME_RESULTS + "/" + linksID + ".csv";
 		openLinks(header);
+	}
+
+	public LinksCSV(String ID, String directoryPath) {
+		this.linksID = ID;
+		this.fileLinks = directoryPath + "/" + DIRECTORY_NAME_RESULTS + "/" + linksID + ".csv";
+		openLinks();
+	}
+	
+	public LinksCSV(String ID, String directoryPath, Boolean triples) {
+		this.linksID = ID;
+		this.fileLinks = directoryPath + "/" + DIRECTORY_NAME_RESULTS + "/" + linksID + ".nt";
+		openLinks();
 	}
 
 	public void openLinks(String header) {
 		try {
-			streamLinks = FILE_UTILS.createFileStream(directoryLinks);	
+			streamLinks = FILE_UTILS.createFileStream(fileLinks);	
 			addToStream(header);
 		} catch (IOException e) {
-			LOG.logError("openLinks", "Error when creating the following links file: " + directoryLinks);
+			LOG.logError("openLinks", "Error when creating the following links file: " + fileLinks);
+			e.printStackTrace();
+		}
+	}
+
+	public void openLinks() {
+		try {
+			streamLinks = FILE_UTILS.createFileStream(fileLinks);	
+		} catch (IOException e) {
+			LOG.logError("openLinks", "Error when creating the following links file: " + fileLinks);
 			e.printStackTrace();
 		}
 	}
@@ -74,7 +95,7 @@ public class LinksCSV {
 			flushLinks();
 		}
 	}
-	
+
 	public void saveLinks_Between_B_M(CandidateList motherList, CandidateList fatherList, String targetCertificateID, Person bride, Person groom, int yearDifference) {		
 
 		HashMap<String, Candidate> motherPairedNames = motherList.candidates.get(targetCertificateID).organiseMetadata();
@@ -229,7 +250,17 @@ public class LinksCSV {
 	}
 
 
+	public void saveIndividualLink(String idPerson1, String idPerson2, String linksMeta) {
+		if(Integer.parseInt(idPerson1) < Integer.parseInt(idPerson2)) {
+			addToStream(idPerson1 + "," + idPerson2 + "," + linksMeta);
+		} else {
+			addToStream(idPerson2 + "," + idPerson1 + "," + linksMeta);
+		}
+	}
 
+	public String getLinksFilePath() {
+		return this.fileLinks;
+	}
 
 
 }

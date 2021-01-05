@@ -25,23 +25,27 @@ public class Within_B_M {
 	private MyHDT myHDT;
 	private final int MIN_YEAR_DIFF = 13, MAX_YEAR_DIFF = 80, indexingUpdateInterval = 2000, linkingUpdateInterval = 10000;
 	private int maxLev;
-	private Boolean fixedLev;
+	private Boolean fixedLev, bestLink;
 	Index indexPartner, indexMother, indexFather;
 
 	public static final Logger lg = LogManager.getLogger(Within_B_M.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 	LinksCSV LINKS;
 
-	public Within_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean formatCSV) {
+	public Within_B_M(MyHDT hdt, String directoryPath, Integer maxLevenshtein, Boolean fixedLev, Boolean bestLink, Boolean formatCSV) {
 		this.mainDirectoryPath = directoryPath;
 		this.maxLev = maxLevenshtein;
 		this.fixedLev = fixedLev;
+		this.bestLink = bestLink;
 		this.myHDT = hdt;
-		String fixed = "";
+		String fixed = "", best = "";
 		if(fixedLev == true) {
 			fixed = "-fixed";
 		}
-		String resultsFileName = "within-B-M-maxLev-" + maxLevenshtein + fixed;
+		if(bestLink == true) {
+			best = "-best";
+		}
+		String resultsFileName = "within-B-M-maxLev-" + maxLevenshtein + fixed + best;
 		if(formatCSV == true) {
 			String header = "id_certificate_newborn,"
 					+ "id_certificate_partner,"
