@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -159,6 +160,12 @@ public class FileUtilities {
 		return null;
 	}
 
+
+	public String getFileName(String filePath) {
+		Path path = Paths.get(filePath); 
+		Path fileName = path.getFileName();
+		return FilenameUtils.removeExtension(fileName.toString());
+	}
 
 
 	public Boolean checkIfValidLinksFile(String filePath) {

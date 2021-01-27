@@ -22,7 +22,7 @@ public class App
 
 	@Parameter(names = "--fixedLev")
 	boolean fixedLev = false;
-	
+
 	@Parameter(names = "--bestLink")
 	boolean bestLink = false; 
 
@@ -91,15 +91,17 @@ public class App
 			System.out.println("\n");
 
 			System.out.println("Functionalities that are supported in the current version: (case insensitive)");
-			System.out.printf(formatting, "ConvertToHDT:", "Convert an RDF dataset (given as --inputData) to an HDT file in the same directory");
+			System.out.printf(formatting, "ConvertToHDT:", "Convert an RDF dataset (given as --inputData) to an HDT file generated in the same directory. This function can also be used for merging two HDT files into one (see Example 3 below).");
 			System.out.printf(formatting, "ShowDatasetStats:", "Display some general stats about the HDT dataset (given as --inputData)");
 			System.out.printf(formatting, "Within_B_M:", "Link newborns in Birth Certificates to brides/grooms in Marriage Certificates (reconstructs life course)");
 			System.out.printf(formatting, "Between_B_M:", "Link parents of newborns in Birth Certificates to brides and grooms in Marriage Certificates (reconstructs family ties)");
 			System.out.printf(formatting, "Between_M_M:", "Link parents of brides/grooms in Marriage Certificates to brides and grooms in Marriage Certificates (reconstructs family ties)");	
 			System.out.printf(formatting, "Closure:", "Compute the transitive closure of all detected links to get a unique identifier per individual");	
+			
 			System.out.println("\n");
+			System.out.println("------------------------");
 
-			System.out.println("Example of a running configuration:");
+			System.out.println("Example 1. Linking parents of newborns to brides and grooms:");
 			System.out.println("--function Between_B_M --inputData dataDirectory/myData.hdt --outputDir . --format CSV  --maxLev 3 --fixedLev");
 			System.out.println("\nThese arguments indicate that the user wants to:\n "
 					+ "\t \t [Between_B_M] link parents of newborns in Birth Certificates to brides and grooms in Marriage Certificates,\n "
@@ -108,6 +110,25 @@ public class App
 					+ "\t \t [CSV] as a CSV file,\n "
 					+ "\t \t [3] allowing a maximum Levenshtein of 3 per name (first name or last name),\n "
 					+ "\t \t [fixedLev] independently from the length of the name.");
+
+			System.out.println("\n");
+			System.out.println("------------------------");
+
+			System.out.println("Example 2. Generate an HDT file and its index from an RDF dataset:");
+			System.out.println("--function ConvertToHDT --inputData dataDirectory/myData.nq --outputDir . ");
+			System.out.println("\nThis will generate the HDT file 'myData.hdt' and its index 'myData.hdt.index' in the same directory."
+					+ "\nThe index should be kept in the same directory of the HDT file to speed up all queries.");
+
+			System.out.println("\n");
+			System.out.println("------------------------");
+
+			System.out.println("Example 3. Merge two HDT files into one:");
+			System.out.println("--function ConvertToHDT --inputData dataDirectory/hdt1.hdt,dataDirectory/hdt2.hdt --outputDir . ");
+			System.out.println("\nThis will generate a third HDT file 'merged-dataset.hdt' and its index 'merged-dataset.hdt.index' in the same directory."
+					+ "\nThe two input HDT files are separated by a comma ',' without a space)");
+
+			// Add example of computing the closure			
+			
 		}
 
 		LOG.outputConsole("");

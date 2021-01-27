@@ -1,7 +1,9 @@
 package iisg.amsterdam.wp4_links;
 
+import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,20 +12,28 @@ import org.rdfhdt.hdt.exceptions.NotFoundException;
 import org.rdfhdt.hdt.exceptions.ParserException;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
+import org.rdfhdt.hdt.listener.ProgressListener;
 import org.rdfhdt.hdt.options.HDTSpecification;
 import org.rdfhdt.hdt.triples.IteratorTripleString;
 import org.rdfhdt.hdt.triples.TripleString;
 
+import org.apache.jena.query.ARQ;
+
+import iisg.amsterdam.wp4_links.utilities.FileUtilities;
 import iisg.amsterdam.wp4_links.utilities.LoggingUtilities;
 
 import static iisg.amsterdam.wp4_links.Properties.*;
 
-public class MyHDT {
+public class MyHDT implements ProgressListener {
 
 	public HDT dataset;
 
 	public static final Logger lg = LogManager.getLogger(MyHDT.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
+	FileUtilities FILE_UTILS = new FileUtilities();
+
+
+
 
 	/**
 	 * Constructor
@@ -31,21 +41,22 @@ public class MyHDT {
 	 * @param hdt_file_path
 	 *            Path of the HDT file
 	 */
-	public MyHDT(String filePath) {
+	public MyHDT(String filePath) {  // One HDT file with its index are given as input
 		try {
-			LOG.outputConsole("START: Loading HDT Dataset");
+			ARQ.init();
+			LOG.outputConsole("START: Loading HDT Dataset...");
 			long startTime = System.currentTimeMillis();
-			dataset = HDTManager.loadIndexedHDT(filePath, null);
-			IteratorTripleString it;
-			try {
-				it = dataset.search("", "", "");
-				LOG.outputTotalRuntime("Loading HDT Dataset", startTime, true);			
-				DecimalFormat formatter = new DecimalFormat("#,###");
-				LOG.outputConsole("--- 	# Triples in dataset: " + formatter.format(it.estimatedNumResults()) + " ---");
-			} catch (NotFoundException e) {
-				LOG.logError("MyHDT_Constructor", "Error estimating triples in HDT dataset");
-				e.printStackTrace();
-			}		
+			dataset = HDTManager.loadIndexedHDT(filePath, null);	
+			LOG.outputTotalRuntime("Loading HDT Dataset", startTime, true);	
+			System.out.println("Total Triples: "+ dataset.getTriples().getNumberOfElements());
+			//	System.out.println("Different subjects: "+dataset.getDictionary().getNsubjects());
+			//	System.out.println("Different predicates: "+dataset.getDictionary().getNpredicates());
+			//	System.out.println("Different objects: "+dataset.getDictionary().getNobjects());
+			//  IteratorTripleString it;
+			//	it = dataset.search("", "", "");
+			//	LOG.outputTotalRuntime("Loading HDT Dataset", startTime, true);			
+			//	DecimalFormat formatter = new DecimalFormat("#,###");
+			//	LOG.outputConsole("--- 	# Triples in dataset: " + formatter.format(it.estimatedNumResults()) + " ---");		
 		} catch (IOException e) {
 			LOG.logError("MyHDT_Constructor", "Error loading HDT dataset");
 			e.printStackTrace();
@@ -53,9 +64,12 @@ public class MyHDT {
 	}
 
 
-	public MyHDT(String inputRDF, String outputDir) {
+	public MyHDT(String inputRDF, String outputDir) { // One RDF file is given as input to be converted to HDT
+		ARQ.init();
+		long startTime = System.currentTimeMillis();
 		String baseURI = "file://" + inputRDF;
-		String outputHDT = outputDir + "/dataset.hdt";
+		String fileName = FILE_UTILS.getFileName(inputRDF);
+		String outputHDT = outputDir + "/" + fileName + ".hdt";
 		RDFNotation notation = null;
 		try {
 			notation =  RDFNotation.guess(inputRDF);
@@ -63,20 +77,52 @@ public class MyHDT {
 			LOG.logError("MyHDT Constructor", "Could not guess notation for "+inputRDF+" - Trying NTriples...");
 			notation = RDFNotation.NTRIPLES;
 		}
-
 		HDT hdt;
 		try {
+			LOG.outputConsole("START: Generating HDT dataset...");
 			hdt = HDTManager.generateHDT(inputRDF, baseURI, notation, new HDTSpecification(), null);
 			hdt.saveToHDT(outputHDT, null);
-			LOG.outputConsole("HDT saved to file in: " + outputHDT);
+			LOG.outputTotalRuntime("HDT generated and saved at "+ outputHDT, startTime, true);	
+			startTime = System.currentTimeMillis();
+			LOG.outputConsole("START: Generating HDT index...");
 			hdt = HDTManager.indexedHDT(hdt, null);
-			LOG.outputConsole("Index generated and saved in: " + outputHDT);
+			LOG.outputTotalRuntime("Index generated and saved at: "+ outputHDT+".index", startTime, true);
 			hdt.close();
 		} catch (IOException | ParserException e) {
 			LOG.logError("MyHDT Constructor", "Problem generating HDT file");
 			LOG.logError("MyHDT Constructor", e.getLocalizedMessage());
 		} 
 	}
+
+
+	public MyHDT(String inputHDT1, String inputHDT2, String outputDir) { // Two HDT files given as input to be merged
+		ARQ.init();	
+		long startTime = System.currentTimeMillis();
+		String outputHDT = outputDir + "/merged-dataset.hdt";
+		File file = new File(outputHDT);
+		File theDir = new File(file.getAbsolutePath()+"_tmp");
+		theDir.mkdirs();
+		String location = theDir.getAbsolutePath()+"/";
+		HDT hdt;
+		try {
+			LOG.outputConsole("START: Merging HDT datasets...");
+			hdt = HDTManager.catHDT(location, inputHDT1, inputHDT2, new HDTSpecification(), null);
+			hdt.saveToHDT(outputHDT, null);
+			LOG.outputTotalRuntime("HDT merged and saved at "+ outputHDT, startTime, true);
+			Files.delete(Paths.get(location+"dictionary"));
+			Files.delete(Paths.get(location+"triples"));
+			theDir.delete();
+			startTime = System.currentTimeMillis();
+			LOG.outputConsole("START: Generating HDT index...");
+			hdt = HDTManager.indexedHDT(hdt, null);
+			LOG.outputTotalRuntime("Index generated and saved at: "+ outputHDT+".index", startTime, true);
+			hdt.close();
+		} catch (IOException e) {
+			LOG.logError("MyHDT Constructor", "Problem generating HDT file");
+			LOG.logError("MyHDT Constructor", e.getLocalizedMessage());
+		} 
+	}
+
 
 
 	// ===== Statistics =====
@@ -456,6 +502,13 @@ public class MyHDT {
 			}
 		}
 		return role;
+	}
+
+
+	@Override
+	public void notifyProgress(float level, String message) {
+		// TODO Auto-generated method stub
+
 	}
 
 

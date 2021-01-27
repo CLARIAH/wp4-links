@@ -21,11 +21,9 @@ public class Controller {
 	private int maxLev;
 	private boolean fixedLev = false, bestLink = false, outputFormatCSV = true; 
 
-
 	public static final Logger lg = LogManager.getLogger(Controller.class);
 	LoggingUtilities LOG = new LoggingUtilities(lg);
 	FileUtilities FILE_UTILS = new FileUtilities();
-
 
 	public Controller(String function, int maxlev, Boolean fixedLev, Boolean bestLink, String inputDataset, String outputDirectory, String outputFormat) {
 		this.function = function;
@@ -48,8 +46,8 @@ public class Controller {
 				}
 				break;
 			case "converttohdt":
-				if(checkInputDataset() && checkInputDirectory()) {
-					convertToHDT();
+				if(checkInputDirectory()) {
+					convertToHDT(inputDataset);
 				}
 				break;
 			case "within_b_m":
@@ -148,6 +146,16 @@ public class Controller {
 		}
 	}
 
+	public Boolean checkInputDataset(String fileURL) {
+		if(FILE_UTILS.checkIfFileExists(fileURL) == true) {
+			LOG.logDebug("checkInputFileInput", "The following dataset is set as input dataset: " + inputDataset);
+			return true;
+		} else {
+			LOG.logError("checkInputFileInput", "Invalid or Missing user input for parameter: --inputData", "A valid HDT file is required as input after parameter: --inputData");
+			return false;
+		}
+	}
+
 
 	public Boolean checkInputDirectory() {
 		if(FILE_UTILS.checkIfDirectoryExists(outputDirectory)) {
@@ -196,8 +204,19 @@ public class Controller {
 	}
 
 
-	public void convertToHDT() {
-		new MyHDT(inputDataset, outputDirectory);
+	public void convertToHDT(String s) {
+		if(inputDataset.contains(",")){
+			System.out.println("Input Dataset: " + inputDataset);
+			String[] inputs = inputDataset.split(",");
+			if(checkInputDataset(inputs[0]) && checkInputDataset(inputs[1])) {
+				new MyHDT(inputs[0], inputs[1], outputDirectory);
+			}
+		} 
+		else {
+			if(checkInputDataset()){
+				new MyHDT(inputDataset, outputDirectory);
+			}
+		}
 	}
 
 
